@@ -1,18 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"handler"
+	"log"
 	"net/http"
+	"os"
 )
 
-func main()  {
-	http.HandleFunc("/file/upload", handler.UploadHandler)
-	http.HandleFunc("/file/upload/suc", handler.UploadSucHandler)
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		fmt.Printf("Failed to start server, err:%s", err.Error())
-		return
-	}
-	return
+func main() {
+	// register http 处理函数
+	http.HandleFunc("/file/", handler.Handler)
+	log.Fatal(http.ListenAndServe(os.Getenv("LISTEN_ADDRESS"), nil))
 }
