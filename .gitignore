@@ -4,4 +4,12 @@ pkg/
 .idea/
 /idea/
 
+bin/
+/bin/
+bin
 
+src/github.com/
+src/golang.org/
+
+/src/github.com/
+/src/golang.org/

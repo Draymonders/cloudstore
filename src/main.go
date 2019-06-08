@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	const listenPort = ":80"
+	const listenPort = ":8080"
 
 	// 动态路由
 	http.HandleFunc("/file/upload", handler.UploadHandler)
@@ -17,7 +17,7 @@ func main() {
 	http.HandleFunc("/file/down", handler.FileDownloadHandler)
 	http.HandleFunc("/file/del", handler.FileDeleteHandler)
 	http.HandleFunc("/file/update", handler.FileMetaUpdateHandler)
-	// http.HandleFunc("/file/")
+
 	err := http.ListenAndServe(listenPort, nil)
 	if err != nil {
 		fmt.Println("server start failed err:" + err.Error() + "\n")
