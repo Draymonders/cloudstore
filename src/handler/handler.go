@@ -1,54 +1,173 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
-	"log"
+	"io/ioutil"
+	"meta"
 	"net/http"
 	"os"
-	"strings"
+	"strconv"
+	"time"
+	"util"
 )
 
-//  handle request
-func Handler(w http.ResponseWriter, r *http.Request) {
-	m := r.Method
-	if m == http.MethodPut {
-		put(w, r)
-		return
-	} else if m == http.MethodGet {
-		get(w, r)
-		return
+const baseFormat = "2006-01-02 15:04:05"
+const dirPath = "D:\\tmp\\"
+
+// UploadHandler : 上传文件函数
+func UploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		data, err := ioutil.ReadFile("./static/view/index.html")
+		if err != nil {
+			fmt.Println("Read file index.html error")
+			return
+		}
+		io.WriteString(w, string(data))
+		fmt.Println("Read file index.html")
+	} else if r.Method == "POST" {
+		// 获取文件
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			fmt.Println("Failed to upload file")
+			return
+		}
+		defer file.Close()
+		// 实际存放路径
+		filePath := dirPath + header.Filename
+		// create fileMeta to store file meta
+		fileMeta := meta.FileMeta{
+			FileName:   header.Filename,
+			FilePath:   filePath,
+			CreateTime: time.Now().Format(baseFormat),
+		}
+
+		realFile, err := os.Create(filePath)
+		if err != nil {
+			fmt.Println("Failed to create file: " + header.Filename)
+			return
+		}
+		defer realFile.Close()
+		size, err := io.Copy(realFile, file)
+		if err != nil {
+			fmt.Println("Failed move file to newFile")
+			return
+		}
+		// store size
+		fileMeta.FileSize = size
+		// store Hash
+		realFile.Seek(0, 0)
+		fileMeta.Hash = util.FileMD5(realFile)
+		fmt.Println(fileMeta)
+		// store fileMeta
+		meta.UpdateFileMeta(fileMeta)
+		fmt.Println(header.Filename + " uploaded success")
+		http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
 	}
-	// get error , return @code 405 Method Not Allowed
-	w.WriteHeader(http.StatusMethodNotAllowed)
 }
 
-func put(w http.ResponseWriter, r *http.Request) {
-	// EscapedPath
-	filePath := "/file/" + strings.Split(r.URL.EscapedPath(), "/")[2]
-	log.Println("put path: ", filePath)
-	// now f is a io.Writer
-	f, e := os.Create(os.Getenv("STORE_ROOT") + filePath)
-	if e != nil {
-		log.Println(e)
-		// get error , return @code 500 Internal Server Error
+// SucHandler : 上传成功
+func SucHandler(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "Upload success")
+}
+
+// GetFileMetaHandler : 获取文件元数据信息
+func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
+	// 解析Form
+	r.ParseForm()
+
+	fileName := r.Form["filename"][0]
+	fileMeta := meta.GetFileMeta(fileName)
+	fmt.Println("get filename: ", fileName, " fileMeta: ", fileMeta)
+	data, err := json.Marshal(fileMeta)
+	if err != nil {
+		fmt.Println("GetFileMetaHandler: parse fileMeta error")
+		return
+	}
+	// tranfer json to client
+	w.Write(data)
+}
+
+// QueryMultiHandler : 批量获取近期上传的文件
+func QueryMultiHandler(w http.ResponseWriter, r *http.Request) {
+	// 解析Form
+	r.ParseForm()
+
+	count, _ := strconv.Atoi(r.Form.Get("limit"))
+	fmt.Println("QueryMultiHandler: count: ", count)
+	fileMetas := meta.GetLastFileMetas(count)
+	data, err := json.Marshal(fileMetas)
+	if err != nil {
+		fmt.Println("QueryMultiHandler: parse fileMetas error")
+		return
+	}
+	w.Write(data)
+}
+
+// FileDownloadHandler : 下载函数
+func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
+	// 解析Form
+	r.ParseForm()
+	filename := r.Form.Get("filename")
+	fmt.Println("FileDownloadHandler: filename: ", filename)
+	fileMeta := meta.GetFileMeta(filename)
+	fmt.Println("FileDownloadHandler: fileMeta: ", fileMeta)
+
+	file, err := os.Open(fileMeta.FilePath)
+	if err != nil {
+		fmt.Println("FileDownloadHandler: can not find the file: ", fileMeta.FilePath)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer f.Close()
-	io.Copy(f, r.Body)
-}
-
-func get(w http.ResponseWriter, r *http.Request) {
-	filePath := "/file/" + strings.Split(r.URL.EscapedPath(), "/")[2]
-	log.Println("get path: ", filePath)
-	// now f is a io.Reader
-	f, e := os.Open(os.Getenv("STORE_ROOT") + filePath)
-	if e != nil {
-		log.Println(e)
-		// get error, return @code 404 Status Not Found
-		w.WriteHeader(http.StatusNotFound)
+	// close the file
+	defer file.Close()
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		fmt.Println("FileDownloadHandler: can not read the file: ", fileMeta.FilePath)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer f.Close()
-	io.Copy(w, f)
+	// set header
+	w.Header().Set("Content-Type", "application/octect-stream")
+	w.Header().Set("content-disposition", "attachment; filename=\""+fileMeta.FileName+"\"")
+
+	// write data to client
+	w.Write(data)
+}
+
+// FileDeleteHandler : 删除函数
+func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	// 解析Form
+	r.ParseForm()
+	filename := r.Form.Get("filename")
+	fmt.Println("FileDeleteHandler: filename: ", filename)
+	fileMeta := meta.GetFileMeta(filename)
+	fmt.Println("FileDeleteHandler: fileMeta: ", fileMeta)
+	os.Remove(fileMeta.FilePath)
+	meta.RemoveFileMeta(filename)
+	fmt.Println("FileDeleteHandler: delete file: ", fileMeta.FilePath, " ok")
+	// set ok
+	w.WriteHeader(http.StatusOK)
+}
+
+// FileMetaUpdateHandler : 文件元信息更改
+func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	// 解析Form
+	r.ParseForm()
+	filename := r.Form.Get("filename")
+	newfilename := r.Form.Get("newfilename")
+
+	fmt.Println("FileMetaUpdateHandler: filename: ", filename, " newfilename: ", newfilename)
+
+	fileMeta := meta.GetFileMeta(filename)
+	fmt.Println("FileMetaUpdateHandler: old fileMeta: ", fileMeta)
+	// remove old fileMeta
+	meta.RemoveFileMeta(filename)
+	// store new fileMeta
+	fileMeta.FileName = newfilename
+	meta.UpdateFileMeta(fileMeta)
+	fmt.Println("FileMetaUpdateHandler: new fileMeta: ", fileMeta)
+	// set ok
+	w.WriteHeader(http.StatusOK)
 }

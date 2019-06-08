@@ -1,0 +1,74 @@
+<html>
+
+    <head>
+        <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+        <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+        <link rel="stylesheet" 
+            href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" 
+            integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+        <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+        <link rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" 
+        integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+        <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" 
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" 
+            crossorigin="anonymous"></script>
+        <script lang="javascript">     
+        </script>
+    </head>
+
+<body style="width:100%;height:100%">
+        <div style="width:100%;height:100%;margin:0 0 10px 0;text-align: center;">
+            <div style="font-size:20px;font-weight:bold;
+                margin:0;background: powderblue;height:32px;">
+                文件云盘首页
+            </div>
+            <table style="height:100%;width:100%;text-align: left;border-width: 2px; border-color: lightslategrey;"> 
+                <tbody>
+                    <tr style="margin-bottom: 20px;">
+                        <td style="width:20%;height: 100%;background: lightsteelblue;">
+                            <div style="text-align: top;height:20%;margin: 10px 0 0 10px;">
+                                <img style="width:80px;height:80px;" src="/static/img/avatar.jpeg"></img><br>
+                                用户名: <span id="username" style="color: seagreen"></span><br>
+                                注册时间: <span id="regtime" style="color: seagreen"></span><br>
+                            </div>
+                            <div style="height: 80%;"></div>
+                        </td>
+                        <td style="width: 3px;height:100%;">
+                            <div style="width:100%;height: 100%;background:rebeccapurple;"></div>
+                        </td>
+                        <td style="text-align: top;">
+                            <div>文件列表</div>
+                            <div style="height:95%;"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+</body>
+
+<script lang="javascript">
+    window.onload = function() {
+        var username = document.getElementById('username');
+        $.ajax({
+            url: "/user/info",
+            type: "POST",
+            data: {"username" :  username.value},
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (textStatus == "error") {
+                    alert(textStatus + " : " +errorThrown);
+                } else {
+                    alert(textStatus);
+                }
+            },
+            success: function(data, textStatus, jqXHR) {
+                    document.getElementById("username").innerHTML = data.username;
+                    document.getElementById("regtime").innerHTML = data.regtime;
+            }
+        });
+    }
+</script>
+</html>
