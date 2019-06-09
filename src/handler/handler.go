@@ -61,7 +61,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		fileMeta.Hash = util.FileMD5(realFile)
 		fmt.Println(fileMeta)
 		// store fileMeta
-		meta.UpdateFileMeta(fileMeta)
+		flag := meta.CreateFileMetaDB(fileMeta)
+		if flag == false {
+			fmt.Println(header.Filename + " store meta to db error")
+			return
+		}
 		fmt.Println(header.Filename + " uploaded success")
 		http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
 	}
@@ -78,7 +82,7 @@ func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	fileName := r.Form["filename"][0]
-	fileMeta := meta.GetFileMeta(fileName)
+	fileMeta := meta.GetFileMetaDB(fileName)
 	fmt.Println("get filename: ", fileName, " fileMeta: ", fileMeta)
 	data, err := json.Marshal(fileMeta)
 	if err != nil {
@@ -96,7 +100,7 @@ func QueryMultiHandler(w http.ResponseWriter, r *http.Request) {
 
 	count, _ := strconv.Atoi(r.Form.Get("limit"))
 	fmt.Println("QueryMultiHandler: count: ", count)
-	fileMetas := meta.GetLastFileMetas(count)
+	fileMetas := meta.GetFileMetaListsDB(count)
 	data, err := json.Marshal(fileMetas)
 	if err != nil {
 		fmt.Println("QueryMultiHandler: parse fileMetas error")
@@ -111,7 +115,7 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	filename := r.Form.Get("filename")
 	fmt.Println("FileDownloadHandler: filename: ", filename)
-	fileMeta := meta.GetFileMeta(filename)
+	fileMeta := meta.GetFileMetaDB(filename)
 	fmt.Println("FileDownloadHandler: fileMeta: ", fileMeta)
 
 	file, err := os.Open(fileMeta.FilePath)
@@ -142,10 +146,10 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	filename := r.Form.Get("filename")
 	fmt.Println("FileDeleteHandler: filename: ", filename)
-	fileMeta := meta.GetFileMeta(filename)
+	fileMeta := meta.GetFileMetaDB(filename)
 	fmt.Println("FileDeleteHandler: fileMeta: ", fileMeta)
 	os.Remove(fileMeta.FilePath)
-	meta.RemoveFileMeta(filename)
+	meta.RemoveFileMetaDB(filename)
 	fmt.Println("FileDeleteHandler: delete file: ", fileMeta.FilePath, " ok")
 	// set ok
 	w.WriteHeader(http.StatusOK)
@@ -160,14 +164,18 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("FileMetaUpdateHandler: filename: ", filename, " newfilename: ", newfilename)
 
-	fileMeta := meta.GetFileMeta(filename)
-	fmt.Println("FileMetaUpdateHandler: old fileMeta: ", fileMeta)
+	// fileMeta := meta.GetFileMeta(filename)
+	// fmt.Println("FileMetaUpdateHandler: old fileMeta: ", fileMeta)
 	// remove old fileMeta
-	meta.RemoveFileMeta(filename)
+	// meta.RemoveFileMeta(filename)
 	// store new fileMeta
-	fileMeta.FileName = newfilename
-	meta.UpdateFileMeta(fileMeta)
-	fmt.Println("FileMetaUpdateHandler: new fileMeta: ", fileMeta)
+	// fileMeta.FileName = newfilename
+	// meta.UpdateFileMeta(fileMeta)
+	// fmt.Println("FileMetaUpdateHandler: new fileMeta: ", fileMeta)
 	// set ok
+	flag := meta.UpdateFileMetaFromfilenameDB(filename, newfilename)
+	if flag == false {
+		fmt.Printf("FileMetaUpdateHandler filename %s to %s error", filename, newfilename)
+	}
 	w.WriteHeader(http.StatusOK)
 }

@@ -23,5 +23,4 @@ func main() {
 		fmt.Println("server start failed err:" + err.Error() + "\n")
 		return
 	}
-
 }
