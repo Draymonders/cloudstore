@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -31,6 +30,7 @@ func DBConn() *sql.DB {
 }
 
 // ParseRows : TODO parse the return cow
+/*
 func ParseRows(rows *sql.Rows) []map[string]interface{} {
 	columns, _ := rows.Columns()
 	scanArgs := make([]interface{}, len(columns))
@@ -40,11 +40,13 @@ func ParseRows(rows *sql.Rows) []map[string]interface{} {
 	}
 	return nil
 }
-
+*/
 // checkErr : if error occurs, then log it
+/*
 func checkErr(err error) {
 	if err != nil {
 		log.Fatal(err)
 		panic(err)
 	}
 }
+*/

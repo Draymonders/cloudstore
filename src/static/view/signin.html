@@ -29,7 +29,7 @@
                 <tbody>
                     <tr style="margin-bottom: 20px;">
                         <td>
-                                <span class="p">*</span>
+                                <span class="p">&nbsp;</span>
                                 <label for="username" class="l"> 用户名:</label>
                         </td>
                         <td>
@@ -40,11 +40,11 @@
                     <tr><td><br></td><td></td></tr>
                     <tr style="margin-bottom: 20px;">
                             <td>
-                                    <span class="p">*</span>
+                                    <span class="p">&nbsp;</span>
                                     <label for="password" class="l"> 密码:</label>
                             </td>
                             <td>
-                                    <input id="password" type="text" 
+                                    <input id="password" type="password" 
                                     style="height:30px;width:250px;padding-right:50px;">
                             </td>
                         </tr>
@@ -73,16 +73,14 @@
             url: "/user/signin",
             type: "POST",
             data: {"username" :  username.value, "password" :  password.value},
-            error: function(jqXHR, textStatus, errorThrown) {
-                if (textStatus == "error") {
-                    alert(textStatus + " : " +errorThrown);
-                } else {
-                    alert(textStatus);
-                }
+            error: function(err) {
+                    alert(err);
             },
-            success: function(data, textStatus, jqXHR) {
-                // alert(data);
-                window.location.href = data;
+            success: function(body) {
+                var resp = JSON.parse(body);
+                localStorage.setItem("token", resp.data.Token)
+                localStorage.setItem("username", resp.data.Username)
+                window.location.href = resp.data.Location;
             }
         });
     }
