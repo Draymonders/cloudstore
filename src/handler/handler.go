@@ -14,7 +14,7 @@ import (
 )
 
 const baseFormat = "2006-01-02 15:04:05"
-const dirPath = "/home/ixiaobing/tmp/"
+const dirPath = "/data/tmp/"
 
 // UploadHandler : 上传文件函数
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
