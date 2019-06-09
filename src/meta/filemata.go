@@ -62,6 +62,7 @@ func GetFileMetaDB(filename string) FileMeta {
 		fmt.Println("GetFileMeta from db err: ", err.Error())
 		return FileMeta{}
 	}
+	fmt.Println("tfile:", tfile.FileName, tfile.FileSize, tfile.FilePath, tfile.Hash)
 	fileMeta := FileMeta{
 		FileName: tfile.FileName.String,
 		FileSize: tfile.FileSize.Int64,
@@ -77,14 +78,14 @@ func GetFileMetaListsDB(count int) []FileMeta {
 		fmt.Println("GetFileMetaListsDB err: ", err.Error())
 		return nil
 	}
-	fileMetas := make([]FileMeta, count)
-	for _, tfile := range tfiles {
+	fileMetas := make([]FileMeta, len(tfiles))
+	for i, tfile := range tfiles {
 		fileMeta := FileMeta{
 			FileName: tfile.FileName.String,
 			FileSize: tfile.FileSize.Int64,
 			FilePath: tfile.FilePath.String,
 			Hash:     tfile.Hash}
-		fileMetas = append(fileMetas, fileMeta)
+		fileMetas[i] = fileMeta
 	}
 	return fileMetas
 }

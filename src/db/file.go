@@ -11,13 +11,14 @@ type TableFile struct {
 	FileSize sql.NullInt64
 	FilePath sql.NullString
 	Hash     string
+	// CreateTime
 }
 
 // OnFileUploadFinished : file uploaded, store meta to db
 func OnFileUploadFinished(filename string, filesize int64, filepath string, hash string) bool {
 	stmt, err := mydb.DBConn().Prepare(
 		"insert ignore into tb_file(`filename`, `filesize`, `filepath`, `hash`, `status`) " +
-			"values(?,?,?,?,0)")
+			"values(?,?,?,?,1)")
 	if err != nil {
 		fmt.Println("Failded to prepare statement, err: ", err.Error())
 		return false
@@ -42,8 +43,8 @@ func OnFileUploadFinished(filename string, filesize int64, filepath string, hash
 // GetFileMeta : througn filename search fileMeta
 func GetFileMeta(filename string) (*TableFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select filename, filesize, filepath, hash from tb_file" +
-			"where filename = ? and status = 1 limit 1")
+		"select filename, filesize, filepath, hash from tb_file " +
+			" where filename = ? and status = 1 limit 1")
 	if err != nil {
 		fmt.Println("Failded to prepare statement, err: ", err.Error())
 		return nil, err
@@ -79,8 +80,8 @@ func IsFileUploaded(hash string) bool {
 // GetFileMetaLists : get lists of recent file
 func GetFileMetaLists(limit int) ([]TableFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"seletct filename, filesize, filepath, hash from tb_file" +
-			"where status=1 limt ?")
+		"select filename, filesize, filepath, hash from tb_file" +
+			" where status=1 limit ?")
 	if err != nil {
 		fmt.Println("Failded to prepare statement, err: ", err.Error())
 		return nil, err
@@ -147,7 +148,7 @@ func OnFileMetaUpdate(oldfilename, newfilename string) bool {
 	}
 	if nums, err := res.RowsAffected(); err == nil {
 		if nums <= 0 {
-			fmt.Printf("File Remove from tb_file err:", err.Error())
+			fmt.Println("File Remove from tb_file err:", err.Error())
 			return false
 		}
 		return true

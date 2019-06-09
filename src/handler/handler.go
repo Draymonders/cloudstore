@@ -148,11 +148,13 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("FileDeleteHandler: filename: ", filename)
 	fileMeta := meta.GetFileMetaDB(filename)
 	fmt.Println("FileDeleteHandler: fileMeta: ", fileMeta)
-	os.Remove(fileMeta.FilePath)
+	// TODO 懒删除，用户删除文件一个星期后删除
+	// os.Remove(fileMeta.FilePath)
 	meta.RemoveFileMetaDB(filename)
 	fmt.Println("FileDeleteHandler: delete file: ", fileMeta.FilePath, " ok")
 	// set ok
 	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "Delete success")
 }
 
 // FileMetaUpdateHandler : 文件元信息更改
@@ -178,4 +180,5 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("FileMetaUpdateHandler filename %s to %s error", filename, newfilename)
 	}
 	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "Update success")
 }
