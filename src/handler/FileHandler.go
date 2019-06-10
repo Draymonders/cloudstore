@@ -1,6 +1,7 @@
 package handler
 
 import (
+	mydb "db"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 	"util"
 )
 
@@ -19,15 +19,23 @@ const dirPath = "/data/tmp/"
 // UploadHandler : 上传文件函数
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		data, err := ioutil.ReadFile("./static/view/index.html")
-		if err != nil {
-			fmt.Println("Read file index.html error")
-			return
-		}
-		io.WriteString(w, string(data))
+		// data, err := ioutil.ReadFile("./static/view/index.html")
+		// if err != nil {
+		// 	fmt.Println("Read file index.html error")
+		// 	return
+		// }
+		// io.WriteString(w, string(data))
+		http.Redirect(w, r, "/static/view/index.html", http.StatusFound)
 		fmt.Println("Read file index.html")
+		return
 	} else if r.Method == "POST" {
-		// 获取文件
+		// parse data from form
+		r.ParseForm()
+
+		// get username
+		username := r.Form.Get("username")
+
+		// get the file from buffer
 		file, header, err := r.FormFile("file")
 		if err != nil {
 			fmt.Println("Failed to upload file")
@@ -38,11 +46,10 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		filePath := dirPath + header.Filename
 		// create fileMeta to store file meta
 		fileMeta := meta.FileMeta{
-			FileName:   header.Filename,
-			FilePath:   filePath,
-			CreateTime: time.Now().Format(baseFormat),
+			FileName: header.Filename,
+			FilePath: filePath,
 		}
-
+		// new a real file to store file
 		realFile, err := os.Create(filePath)
 		if err != nil {
 			fmt.Println("Failed to create file: " + header.Filename)
@@ -56,27 +63,35 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// store size
 		fileMeta.FileSize = size
+		// TODO split to Hash service
+
 		// store Hash
 		realFile.Seek(0, 0)
 		fileMeta.Hash = util.FileMD5(realFile)
 		fmt.Println(fileMeta)
+
 		// store fileMeta
 		flag := meta.CreateFileMetaDB(fileMeta)
 		if flag == false {
-			fmt.Println(header.Filename + " store meta to db error")
+			fmt.Println(header.Filename + " store meta to file db error")
+			return
+		}
+		flag = mydb.OnUserFileUploadFinished(username, fileMeta.FileName, fileMeta.Hash, fileMeta.FileSize)
+		if flag == false {
+			fmt.Println(header.Filename + " store meta to user file db error")
 			return
 		}
 		fmt.Println(header.Filename + " uploaded success")
-		http.Redirect(w, r, "/file/upload/suc", http.StatusFound)
+		http.Redirect(w, r, "/static/view/home.html", http.StatusFound)
 	}
 }
 
-// SucHandler : 上传成功
+// SucHandler : upload success
 func SucHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Upload success")
 }
 
-// GetFileMetaHandler : 获取文件元数据信息
+// GetFileMetaHandler : query more about a file
 func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 	// 解析Form
 	r.ParseForm()
@@ -93,23 +108,28 @@ func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// QueryMultiHandler : 批量获取近期上传的文件
+// QueryMultiHandler : query user files for(username, limit)
 func QueryMultiHandler(w http.ResponseWriter, r *http.Request) {
 	// 解析Form
 	r.ParseForm()
-
+	username := r.Form.Get("username")
 	count, _ := strconv.Atoi(r.Form.Get("limit"))
 	fmt.Println("QueryMultiHandler: count: ", count)
-	fileMetas := meta.GetFileMetaListsDB(count)
-	data, err := json.Marshal(fileMetas)
+	// fileMetas := meta.(count)
+	userFiles, err := mydb.QueryUserFileMetas(username, count)
 	if err != nil {
-		fmt.Println("QueryMultiHandler: parse fileMetas error")
+		fmt.Println("QueryMultiHandler err:", err.Error())
+		return
+	}
+	data, err := json.Marshal(userFiles)
+	if err != nil {
+		fmt.Println("QueryMultiHandler: parse userFiles error")
 		return
 	}
 	w.Write(data)
 }
 
-// FileDownloadHandler : 下载函数
+// FileDownloadHandler : download file
 func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	// 解析Form
 	r.ParseForm()
@@ -140,7 +160,7 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// FileDeleteHandler : 删除函数
+// FileDeleteHandler : remove file meta
 func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// 解析Form
 	r.ParseForm()
@@ -157,7 +177,7 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Delete success")
 }
 
-// FileMetaUpdateHandler : 文件元信息更改
+// FileMetaUpdateHandler : update file meta
 func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	// 解析Form
 	r.ParseForm()
@@ -181,4 +201,47 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "Update success")
+}
+
+// TryFastUploadHandler : fast upload handler
+func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	// 1. parse req
+	username := r.Form.Get("username")
+	filename := r.Form.Get("filename")
+	filesize, _ := strconv.Atoi(r.Form.Get("filesize"))
+	hash := r.Form.Get("filehash")
+
+	// 2. check if is same exists
+	fileMeta, err := meta.IsFileUploadedDB(hash)
+	if err != nil {
+		fmt.Println("TryFastUploadHandler : err: ", err.Error())
+		return
+	}
+	if fileMeta.Hash == "" {
+		fmt.Println(hash, " have not store")
+		resp := util.RespMsg{
+			Code: -1,
+			Msg:  "秒传失败，请访问普通上传接口",
+		}
+		w.Write(resp.JSONByte())
+		return
+	}
+	suc := mydb.OnUserFileUploadFinished(username,
+		filename, hash, int64(filesize))
+	if suc {
+		resp := util.RespMsg{
+			Code: 0,
+			Msg:  "秒传成功",
+		}
+		w.Write(resp.JSONByte())
+		return
+	}
+	resp := util.RespMsg{
+		Code: -2,
+		Msg:  "秒传失败，请稍后重试",
+	}
+	w.Write(resp.JSONByte())
+	return
 }

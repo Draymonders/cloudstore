@@ -90,12 +90,27 @@ func GetFileMetaListsDB(count int) []FileMeta {
 	return fileMetas
 }
 
-// RemoveFileMeta : set the file meta col's status = 2 (unvaild)
+// RemoveFileMetaDB : set the file meta col's status = 2 (unvaild)
 func RemoveFileMetaDB(filename string) bool {
 	return mydb.OnFileRemoved(filename)
 }
 
-// UpdateFileMetaFromfilename : update oldFilename to newFilename
+// UpdateFileMetaFromfilenameDB : update oldFilename to newFilename
 func UpdateFileMetaFromfilenameDB(oldFilename, newFilename string) bool {
 	return mydb.OnFileMetaUpdate(oldFilename, newFilename)
+}
+
+// IsFileUploadedDB : check if file has checked
+func IsFileUploadedDB(hash string) (FileMeta, error) {
+	tfile, err := mydb.IsFileUploaded(hash)
+	if err != nil {
+		fmt.Println("IsFileUploadedDB : err:", err.Error())
+		return FileMeta{}, err
+	}
+	fileMeta := FileMeta{
+		FileName: tfile.FileName.String,
+		FileSize: tfile.FileSize.Int64,
+		FilePath: tfile.FilePath.String,
+		Hash:     tfile.Hash}
+	return fileMeta, nil
 }

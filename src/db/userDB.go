@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// User : user property
 type User struct {
 	Username     string
 	Email        string
@@ -30,7 +31,7 @@ func UserSignUp(username string, passwd string) bool {
 		return false
 	}
 	rows, err := ret.RowsAffected()
-	fmt.Printf("rows:%d\n", rows)
+	fmt.Printf("rows: %d\n", rows)
 	if nil == err && rows > 0 {
 		fmt.Printf("user %s creat OK\n", username)
 		return true

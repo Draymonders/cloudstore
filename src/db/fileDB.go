@@ -6,12 +6,13 @@ import (
 	"fmt"
 )
 
+// TableFile : file property
 type TableFile struct {
-	FileName sql.NullString
-	FileSize sql.NullInt64
-	FilePath sql.NullString
-	Hash     string
-	// CreateTime
+	FileName   sql.NullString
+	FileSize   sql.NullInt64
+	FilePath   sql.NullString
+	Hash       string
+	CreateTime string
 }
 
 // OnFileUploadFinished : file uploaded, store meta to db
@@ -43,7 +44,7 @@ func OnFileUploadFinished(filename string, filesize int64, filepath string, hash
 // GetFileMeta : througn filename search fileMeta
 func GetFileMeta(filename string) (*TableFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select filename, filesize, filepath, hash from tb_file " +
+		"select filename, filesize, filepath, hash, create_time from tb_file " +
 			" where filename = ? and status = 1 limit 1")
 	if err != nil {
 		fmt.Println("Failded to prepare statement, err: ", err.Error())
@@ -52,7 +53,7 @@ func GetFileMeta(filename string) (*TableFile, error) {
 	defer stmt.Close()
 	tfile := TableFile{}
 	err = stmt.QueryRow(filename).Scan(
-		&tfile.FileName, &tfile.FileSize, &tfile.FilePath, &tfile.Hash)
+		&tfile.FileName, &tfile.FileSize, &tfile.FilePath, &tfile.Hash, &tfile.CreateTime)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -61,26 +62,28 @@ func GetFileMeta(filename string) (*TableFile, error) {
 }
 
 // IsFileUploaded : check if hash already exists
-func IsFileUploaded(hash string) bool {
+func IsFileUploaded(hash string) (*TableFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select 1 from tb_file where hash = ? and status = 1 limit 1")
+		"select filename, filesize, filepath, hash, create_time " +
+			" from tb_file where hash = ? and status = 1 limit 1")
 	if err != nil {
 		fmt.Println("Failded to prepare statement, err: ", err.Error())
-		return false
+		return nil, err
 	}
-	rows, err := stmt.Query(hash)
+	tfile := TableFile{}
+	err = stmt.QueryRow(hash).Scan(
+		&tfile.FileName, &tfile.FileSize, &tfile.FilePath, &tfile.Hash, &tfile.CreateTime)
 	if err != nil {
-		return false
-	} else if rows == nil || !rows.Next() {
-		return false
+		fmt.Println(err.Error())
+		return nil, err
 	}
-	return true
+	return &tfile, nil
 }
 
 // GetFileMetaLists : get lists of recent file
 func GetFileMetaLists(limit int) ([]TableFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select filename, filesize, filepath, hash from tb_file" +
+		"select filename, filesize, filepath, hash, create_time from tb_file" +
 			" where status=1 limit ?")
 	if err != nil {
 		fmt.Println("Failded to prepare statement, err: ", err.Error())
@@ -97,7 +100,7 @@ func GetFileMetaLists(limit int) ([]TableFile, error) {
 	var tfiles []TableFile
 	for i := 0; i < len(values) && rows.Next(); i++ {
 		tfile := TableFile{}
-		err = rows.Scan(&tfile.FileName, &tfile.FileSize, &tfile.FilePath, &tfile.Hash)
+		err = rows.Scan(&tfile.FileName, &tfile.FileSize, &tfile.FilePath, &tfile.Hash, &tfile.CreateTime)
 		if err != nil {
 			fmt.Println(err.Error())
 			break
