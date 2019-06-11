@@ -5,6 +5,7 @@ import (
 	"util"
 )
 
+// HTTPInterceptor : vertify user info
 func HTTPInterceptor(handler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {

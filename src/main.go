@@ -12,9 +12,8 @@ func main() {
 	// 静态资源处理
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
-	// file upload
+	// file upload (include fast upload)
 	http.HandleFunc("/file/upload", handler.UploadHandler)
-	http.HandleFunc("/file/upload/suc", handler.SucHandler)
 	http.HandleFunc("/file/meta", handler.GetFileMetaHandler)
 	http.HandleFunc("/file/query", handler.QueryMultiHandler)
 	http.HandleFunc("/file/down", handler.FileDownloadHandler)
@@ -22,7 +21,7 @@ func main() {
 	http.HandleFunc("/file/update", handler.FileMetaUpdateHandler)
 
 	// fast upload
-	http.HandleFunc("/file/fastupload", handler.TryFastUploadHandler)
+	// http.HandleFunc("/file/fastupload", handler.TryFastUploadHandler)
 
 	// user vertify
 	http.HandleFunc("/user/signup", handler.SignupHandler)
