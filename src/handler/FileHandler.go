@@ -68,8 +68,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		// store Hash
 		realFile.Seek(0, 0)
 		fileMeta.Hash = util.FileMD5(realFile)
-		fmt.Println(fileMeta)
-
+		// fmt.Println(fileMeta)
+		fmt.Printf("name:%s path:%s size:%d hash:%s\n", fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize,
+			fileMeta.Hash)
 		// store fileMeta
 		flag := meta.CreateFileMetaDB(fileMeta)
 		if flag == false {
@@ -81,8 +82,15 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(header.Filename + " store meta to user file db error")
 			return
 		}
+		fmt.Printf("username:%s filename:%s size:%d hash:%s\n", username, fileMeta.FileName, fileMeta.FileSize,
+			fileMeta.Hash)
 		fmt.Println(header.Filename + " uploaded success")
-		http.Redirect(w, r, "/static/view/home.html", http.StatusFound)
+		// http.Redirect(w, r, "/static/view/home.html", http.StatusFound)
+		resp := util.RespMsg{
+			Code: 0,
+			Msg:  "upload success",
+		}
+		w.Write(resp.JSONByte())
 	}
 }
 
@@ -121,6 +129,11 @@ func QueryMultiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("QueryMultiHandler err:", err.Error())
 		return
 	}
+	for _, ufile := range userFiles {
+		fmt.Printf("username:%s filename:%s size:%d hash:%s\n", ufile.Username, ufile.FileName, ufile.FileSize,
+			ufile.Hash)
+	}
+
 	data, err := json.Marshal(userFiles)
 	if err != nil {
 		fmt.Println("QueryMultiHandler: parse userFiles error")
@@ -211,8 +224,9 @@ func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	filename := r.Form.Get("filename")
 	filesize, _ := strconv.Atoi(r.Form.Get("filesize"))
-	hash := r.Form.Get("filehash")
+	hash := r.Form.Get("hash")
 
+	fmt.Printf("hash: %s\n", hash)
 	// 2. check if is same exists
 	fileMeta, err := meta.IsFileUploadedDB(hash)
 	if err != nil {

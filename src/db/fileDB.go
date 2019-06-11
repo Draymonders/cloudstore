@@ -74,7 +74,7 @@ func IsFileUploaded(hash string) (*TableFile, error) {
 	err = stmt.QueryRow(hash).Scan(
 		&tfile.FileName, &tfile.FileSize, &tfile.FilePath, &tfile.Hash, &tfile.CreateTime)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("IsFileUploaded ", err.Error())
 		return nil, err
 	}
 	return &tfile, nil

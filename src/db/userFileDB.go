@@ -8,8 +8,8 @@ import (
 // UserFile : user file property
 type UserFile struct {
 	Username     string
-	Filename     string
-	Filesize     int64
+	FileName     string
+	FileSize     int64
 	Hash         string
 	CreateTime   string
 	LastEditTime string
@@ -36,7 +36,8 @@ func OnUserFileUploadFinished(username, filename, hash string, filesize int64) b
 // QueryUserFileMetas : search file metas from username and limit
 func QueryUserFileMetas(username string, limit int) ([]UserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select filename, filesize, hash from tb_user_file where username = ? and status = 1 limit ?")
+		"select filename, filesize, hash, create_time, last_edit_time " +
+			" from tb_user_file where username = ? and status = 1 limit ?")
 	if err != nil {
 		fmt.Println("Failded to prepare statement, err: ", err.Error())
 		return nil, nil
@@ -51,7 +52,7 @@ func QueryUserFileMetas(username string, limit int) ([]UserFile, error) {
 	var userFiles []UserFile
 	for rows.Next() {
 		ufile := UserFile{}
-		err = rows.Scan(&ufile.Filename, &ufile.Filesize, &ufile.Hash)
+		err = rows.Scan(&ufile.FileName, &ufile.FileSize, &ufile.Hash, &ufile.CreateTime, &ufile.LastEditTime)
 		if err != nil {
 			fmt.Println("QueryUserFileMetas err: ", err.Error())
 			break
@@ -113,7 +114,7 @@ func QueryUserFileMeta(username, hash string) (*UserFile, error) {
 
 	ufile := UserFile{}
 	if rows.Next() {
-		err = rows.Scan(&ufile.Filename, &ufile.Filesize, &ufile.Hash,
+		err = rows.Scan(&ufile.FileName, &ufile.FileSize, &ufile.Hash,
 			&ufile.CreateTime, &ufile.LastEditTime)
 		if err != nil {
 			fmt.Println(err.Error())

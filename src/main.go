@@ -22,6 +22,7 @@ func main() {
 	http.HandleFunc("/file/update", handler.FileMetaUpdateHandler)
 
 	// fast upload
+	http.HandleFunc("/file/fastupload", handler.TryFastUploadHandler)
 
 	// user vertify
 	http.HandleFunc("/user/signup", handler.SignupHandler)
