@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"meta"
 	"net/http"
 	"os"
@@ -21,6 +20,13 @@ func getUserName(r *http.Request) string {
 	username := r.Form.Get("username")
 	fmt.Println("get username : ", username)
 	return username
+}
+
+// getToken : get token
+func getToken(r *http.Request) string {
+	token := r.Form.Get("token")
+	fmt.Println("get token : ", token)
+	return token
 }
 
 // getFileName : get filename
@@ -201,37 +207,6 @@ func QueryMultiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("QueryMultiHandler: parse userFiles error")
 		return
 	}
-	w.Write(data)
-}
-
-// FileDownloadHandler : download file
-func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	// 解析Form
-	r.ParseForm()
-	filename := r.Form.Get("filename")
-	fmt.Println("FileDownloadHandler: filename: ", filename)
-	fileMeta := meta.GetFileMetaDB(filename)
-	fmt.Println("FileDownloadHandler: fileMeta: ", fileMeta)
-
-	file, err := os.Open(fileMeta.FilePath)
-	if err != nil {
-		fmt.Println("FileDownloadHandler: can not find the file: ", fileMeta.FilePath)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	// close the file
-	defer file.Close()
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		fmt.Println("FileDownloadHandler: can not read the file: ", fileMeta.FilePath)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	// set header
-	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\""+fileMeta.FileName+"\"")
-
-	// write data to client
 	w.Write(data)
 }
 
