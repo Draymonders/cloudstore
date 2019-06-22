@@ -13,6 +13,7 @@ type UserFile struct {
 	Hash         string
 	CreateTime   string
 	LastEditTime string
+	DownLoadUrl  string
 }
 
 // OnUserFileUploadFinished : user have finished upload file
@@ -121,6 +122,5 @@ func QueryUserFileMeta(username, hash string) (*UserFile, error) {
 			return nil, err
 		}
 	}
-
 	return &ufile, nil
 }

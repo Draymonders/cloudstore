@@ -29,7 +29,7 @@ func main() {
 	http.HandleFunc("/file/download", handler.HTTPInterceptor(handler.FileDownloadHandler))
 
 	// file down range
-	http.HandleFunc("/file/downloadurl", handler.HTTPInterceptor(handler.DownloadURLHandler))
+	// http.HandleFunc("/file/downloadurl", handler.HTTPInterceptor(handler.DownloadURLHandler))
 	http.HandleFunc("/file/download/range", handler.HTTPInterceptor(handler.RangeDownloadHandler))
 
 	// fast upload

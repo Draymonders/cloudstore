@@ -56,6 +56,7 @@
                     <th>文件hash</th>
                     <th>上传时间</th>
                     <th>最近更新</th>
+                    <th>下载</th>
                   </tr>
                 </thead>
               </table>
@@ -126,6 +127,9 @@
 
           cell = x.insertCell();
           cell.innerHTML = data[i].LastEditTime;
+
+          cell = x.insertCell();
+          cell.innerHTML = "<a href='"+data[i].DownLoadUrl+"'>点击下载</a>";
         }
       }
     });

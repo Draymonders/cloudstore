@@ -198,9 +198,10 @@ func QueryMultiHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("QueryMultiHandler err:", err.Error())
 		return
 	}
-	for _, ufile := range userFiles {
-		fmt.Printf("username:%s filename:%s size:%d hash:%s\n", ufile.Username, ufile.FileName, ufile.FileSize,
-			ufile.Hash)
+	for i, ufile := range userFiles {
+		userFiles[i].DownLoadUrl = DownloadURLHandler(r, ufile.Hash)
+		fmt.Printf("username:%s filename:%s size:%d hash:%s url:%s\n", ufile.Username, ufile.FileName, ufile.FileSize,
+			ufile.Hash, ufile.DownLoadUrl)
 	}
 
 	data, err := json.Marshal(userFiles)

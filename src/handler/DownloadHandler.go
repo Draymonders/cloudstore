@@ -11,13 +11,14 @@ import (
 )
 
 // DownloadURLHandler : generate the file url
-func DownloadURLHandler(w http.ResponseWriter, r *http.Request) {
-	filehash := getHash(r)
+func DownloadURLHandler(r *http.Request, filehash string) string {
+	// filehash := getHash(r)
 	username := getUserName(r)
 	token := getToken(r)
 	tmpURL := fmt.Sprintf(
 		"http://%s/file/download?hash=%s&username=%s&token=%s", r.Host, filehash, username, token)
-	w.Write([]byte(tmpURL))
+	// w.Write([]byte(tmpURL))
+	return tmpURL
 }
 
 // FileDownloadHandler : download file
