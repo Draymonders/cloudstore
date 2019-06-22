@@ -19,8 +19,8 @@ go run main.go
 - [x] 秒传功能
 - [x] 分块上传
 - [x] 断点续传
-- [ ] Ceph 私有云存储
-- [ ] OSS
+- [x] Ceph 私有云存储
+- [ ] OSS 公有云存储
 - [ ] 异步复制 
 - [ ] 微服务改造
 ## 开发环境参数
@@ -36,3 +36,4 @@ IDE `VSCode`
 - [Redis主从同步](./doc/Redis.md)
 - [分块上传原理](./doc/multiPartFileUpload.md)
 - [断点续传原理](./doc/BreakpointContinualTransfer.md)
+- [Ceph私有云存储实践](./doc/ceph.md)

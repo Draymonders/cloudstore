@@ -8,12 +8,9 @@ bin/
 /bin/
 bin
 
-src/github.com/
 src/golang.org/
 
-/src/github.com/
 /src/golang.org/
 
+/src/config/link.go
 
-/src/db/mysql/mysqlLink.go
-/src/cache/redis/redisLink.go
