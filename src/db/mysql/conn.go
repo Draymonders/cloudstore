@@ -10,8 +10,6 @@ import (
 
 var db *sql.DB
 
-const mysqlLink = "root:123456@tcp(192.168.99.130:13306)/icloud?charset=utf8"
-
 // init : init of mysql
 func init() {
 	db, _ = sql.Open("mysql", mysqlLink)

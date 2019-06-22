@@ -102,7 +102,7 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 	rConn := rPool.RedisPool().Get()
 	defer rConn.Close()
 
-	data, err := redis.Values(rConn.DO("HGETALL", "MP_"+upid))
+	data, err := redis.Values(rConn.Do("HGETALL", "MP_"+uploadId))
 	if err != nil {
 		w.Write(util.NewRespMsg(-1, "redis get all err:"+err.Error(), nil).JSONByte())
 		return
@@ -126,6 +126,8 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO : merge all datas
+	// use shell to merge
+	// cat `ls | sort -n` > /tmp/filehash
 
 	// TODO : merge datas and return path store to DB
 	mydb.OnFileUploadFinished(filename, int64(filesize), "path233", filehash)

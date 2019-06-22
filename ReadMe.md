@@ -1,8 +1,8 @@
 # 简易分布式对象存储 -- GO实现
 
-目前已实现简易单机版存储 + MySQL (未用Redis，待添加)
-
-默认启动端口`80`, 默认存储路径`/data/tmp/`
+默认启动端口`80`
+linux默认存储路径`/data/tmp/`
+windows默认存储路径`D:\data\`
 
 启动方式
 
@@ -13,7 +13,7 @@ go run main.go
 ## 功能
 - [x] 单机文件存储
 - [x] MySQL主从复制
-- [x] 用户权限验证
+- [x] Redis主从复制 + shell脚本故障转移
 - [x] 秒传功能
 - [x] 分块上传
 - [x] 断点续传
@@ -21,9 +21,14 @@ go run main.go
 - [ ] OSS
 - [ ] 异步复制 
 - [ ] 微服务改造
-## 环境参数
-Go `go version go1.10.2 linux/amd64`
+## 开发环境参数
+Go `go version go1.12.5 windows/amd64`
  
-操作系统 `Ubuntu 16.04`
+操作系统 `Win 10`
 
-IDE `VS code`
+IDE `VSCode`
+
+## 备注
+[数据表的建立](./doc/table.sql)
+[MySQL主从同步](./doc/MySQL.md)
+[Redis主从同步](./doc/Redis.md)

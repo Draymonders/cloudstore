@@ -13,7 +13,9 @@ import (
 )
 
 const baseFormat = "2006-01-02 15:04:05"
-const dirPath = "/data/tmp/"
+const linuxDirPath = "/data/tmp/"
+const windowsDirPath = "D:/tmp/"
+const dirPath = windowsDirPath
 
 // getUserName : get username
 func getUserName(r *http.Request) string {
@@ -236,15 +238,6 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("FileMetaUpdateHandler: filename: ", filename, " newfilename: ", newfilename)
 
-	// fileMeta := meta.GetFileMeta(filename)
-	// fmt.Println("FileMetaUpdateHandler: old fileMeta: ", fileMeta)
-	// remove old fileMeta
-	// meta.RemoveFileMeta(filename)
-	// store new fileMeta
-	// fileMeta.FileName = newfilename
-	// meta.UpdateFileMeta(fileMeta)
-	// fmt.Println("FileMetaUpdateHandler: new fileMeta: ", fileMeta)
-	// set ok
 	flag := meta.UpdateFileMetaFromfilenameDB(filename, newfilename)
 	if flag == false {
 		fmt.Printf("FileMetaUpdateHandler filename %s to %s error", filename, newfilename)

@@ -1,3 +1,5 @@
+CREATE DATABASE IF NOT EXISTS icloud DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+
 CREATE TABLE `tb_file` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `hash` char(40) NOT NULL DEFAULT '' COMMENT '文件hash',
@@ -11,9 +13,8 @@ CREATE TABLE `tb_file` (
   `ext2` text COMMENT '备用字段2',
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_hash` (`hash`),
-  KEY `idx_status` (`status`),
   KEY `idx_filename` (`filename`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
 
 -- CREATE TABLE `tb_user` (
 --   `id` int(11) NOT NULL AUTO_INCREMENT,

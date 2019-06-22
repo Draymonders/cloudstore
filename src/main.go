@@ -16,13 +16,16 @@ func main() {
 	http.HandleFunc("/file/upload", handler.HTTPInterceptor(handler.UploadHandler))
 	http.HandleFunc("/file/meta", handler.HTTPInterceptor(handler.GetFileMetaHandler))
 	http.HandleFunc("/file/query", handler.HTTPInterceptor(handler.QueryMultiHandler))
-	http.HandleFunc("/file/download", handler.HTTPInterceptor(handler.FileDownloadHandler))
+
 	http.HandleFunc("/file/del", handler.HTTPInterceptor(handler.FileDeleteHandler))
 	http.HandleFunc("/file/update", handler.HTTPInterceptor(handler.FileMetaUpdateHandler))
 
+	// file down
+	http.HandleFunc("/file/download", handler.HTTPInterceptor(handler.FileDownloadHandler))
+
 	// file down range
-	http.HandleFunc("/file/downloadurl", handler.HTTPInterceptor(DownloadURLHandler))
-	http.HandleFunc("/file/download/range", handler.HTTPInterceptor(RangeDownloadHandler))
+	http.HandleFunc("/file/downloadurl", handler.HTTPInterceptor(handler.DownloadURLHandler))
+	http.HandleFunc("/file/download/range", handler.HTTPInterceptor(handler.RangeDownloadHandler))
 
 	// fast upload
 	// http.HandleFunc("/file/fastupload", handler.TryFastUploadHandler)
@@ -36,7 +39,7 @@ func main() {
 		handler.CompleteUploadHandler))
 
 	// user vertify
-	http.HandleFunc("/user/signup", handler.SignupHandler)
+	http.HandleFunc("/user/signup", handler.SignUpHandler)
 	http.HandleFunc("/user/signin", handler.SignInHandler)
 	http.HandleFunc("/user/info", handler.HTTPInterceptor(handler.UserInfoHandler))
 	fmt.Println("server start , listen", listenPort)

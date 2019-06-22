@@ -13,8 +13,8 @@ const (
 	tokenSalt = "_tokenSalt"
 )
 
-// SignupHandler : sign up handler
-func SignupHandler(w http.ResponseWriter, r *http.Request) {
+// SignUpHandler : sign up handler
+func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		http.Redirect(w, r, "/static/view/signup.html", http.StatusFound)
 		return
@@ -28,7 +28,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("sign up user: %s passwd : %s\n", username, passwd)
 		// check username and password valid
 		if len(username) < 3 || len(passwd) < 5 {
-			w.Write([]byte("Invalid parameter"))
+			w.Write([]byte("账户密码设置不合法"))
 			return
 		}
 		// 2. encry password user Md5 and salt

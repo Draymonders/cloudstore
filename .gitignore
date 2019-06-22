@@ -13,3 +13,7 @@ src/golang.org/
 
 /src/github.com/
 /src/golang.org/
+
+
+/src/db/mysql/mysqlLink.go
+/src/cache/redis/redisLink.go
