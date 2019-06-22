@@ -1,8 +1,9 @@
 package meta
 
-import "time"
-
-const baseFormat = "2006-01-02 15:04:05"
+import (
+	. "config"
+	"time"
+)
 
 type ByCreateTime []FileMeta
 
@@ -15,7 +16,7 @@ func (a ByCreateTime) Swap(i, j int) {
 }
 
 func (a ByCreateTime) Less(i, j int) bool {
-	iTime, _ := time.Parse(baseFormat, a[i].CreateTime)
-	jTime, _ := time.Parse(baseFormat, a[j].CreateTime)
+	iTime, _ := time.Parse(BaseFormat, a[i].CreateTime)
+	jTime, _ := time.Parse(BaseFormat, a[j].CreateTime)
 	return iTime.UnixNano() > jTime.UnixNano()
 }

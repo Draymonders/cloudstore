@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	. "config"
 	"database/sql"
 	"fmt"
 	"os"
@@ -12,7 +13,7 @@ var db *sql.DB
 
 // init : init of mysql
 func init() {
-	db, _ = sql.Open("mysql", mysqlLink)
+	db, _ = sql.Open("mysql", MysqlLink)
 	db.SetMaxOpenConns(1000)
 	err := db.Ping()
 	if err != nil {

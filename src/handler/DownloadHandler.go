@@ -1,12 +1,15 @@
 package handler
 
 import (
+	. "config"
 	"db"
 	"fmt"
 	"io/ioutil"
 	"meta"
 	"net/http"
 	"os"
+	"store/ceph"
+	"strings"
 	"util"
 )
 
@@ -42,29 +45,40 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(util.NewRespMsg(-1, "get UserFile through hash and username failed", nil).JSONByte())
 		return
 	}
-
-	file, err := os.Open(fileMeta.FilePath)
-	if err != nil {
-		fmt.Println("FileDownloadHandler: can not find the file: ", fileMeta.FilePath)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	var fileData []byte
+	if strings.HasPrefix(fileMeta.FilePath, DirPath) {
+		fmt.Println("to download file from local...")
+		file, err := os.Open(fileMeta.FilePath)
+		if err != nil {
+			fmt.Println("FileDownloadHandler: can not find the file: ", fileMeta.FilePath)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		// close the file
+		defer file.Close()
+		fileData, err = ioutil.ReadAll(file)
+		if err != nil {
+			fmt.Println("FileDownloadHandler: can not read data from file: ", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else if strings.HasPrefix(fileMeta.FilePath, "/ceph") {
+		fmt.Println("to download file from ceph...")
+		fileData, err = ceph.GetObject("userfile", fileMeta.FilePath)
+		if err != nil {
+			fmt.Println("FileDownloadHandler: can not read data from file: ", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
-	// close the file
-	defer file.Close()
 
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		fmt.Println("FileDownloadHandler: can not read the file: ", fileMeta.FilePath)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 	// set header
 	w.Header().Set("Content-Type", "application/octect-stream")
 	// attachment表示文件将会提示下载到本地，而不是直接在浏览器中打开
 	w.Header().Set("content-disposition", "attachment; filename=\""+userFile.FileName+"\"")
 
 	// write data to client
-	w.Write(data)
+	w.Write(fileData)
 }
 
 // RangeDownloadHandler : download range interface

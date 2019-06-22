@@ -2,6 +2,7 @@ package handler
 
 import (
 	rPool "cache/redis"
+	. "config"
 	mydb "db"
 	"fmt"
 	"math"
@@ -68,7 +69,7 @@ func UploadPartHandler(w http.ResponseWriter, r *http.Request) {
 	rConn := rPool.RedisPool().Get()
 	defer rConn.Close()
 
-	fpath := dirPath + uploadID + "/" + chunkIndex
+	fpath := DirPath + uploadID + "/" + chunkIndex
 	os.MkdirAll(path.Dir(fpath), 0744)
 	fd, err := os.Create(fpath)
 	if err != nil {
@@ -130,8 +131,8 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 	// use shell to merge
 	// cat `ls | sort -n` > /tmp/filename
 
-	filepath := dirPath + "/uploadid"
-	filestore := dirPath + filename
+	filepath := DirPath + "/uploadid"
+	filestore := DirPath + filename
 	if _, err := mergeAllPartFile(filepath, filestore); err != nil {
 		w.Write(util.NewRespMsg(-2, "merge datas failed, please commit again...", nil).JSONByte())
 		return
@@ -147,7 +148,7 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 // mergeAllPartFile: filepath： 分块存储的路径 filestore： 文件最终地址
 func mergeAllPartFile(filepath, filestore string) (bool, error) {
 	var cmd *exec.Cmd
-	cmd = exec.Command(mergeAllShell, filepath, filestore)
+	cmd = exec.Command(MergeAllShell, filepath, filestore)
 
 	if _, err := cmd.Output(); err != nil {
 		fmt.Println(err)

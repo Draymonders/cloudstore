@@ -1,13 +1,16 @@
 package handler
 
 import (
+	. "config"
 	mydb "db"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"meta"
 	"net/http"
 	"os"
+	"store/ceph"
 	"strconv"
 	"util"
 )
@@ -85,9 +88,10 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
-		// real Path
+
 		filename := header.Filename
-		filepath := dirPath + filename
+		filepath := DirPath + filename
+		// real file store in os
 		realFile, err := os.Create(filepath)
 		if err != nil {
 			fmt.Println("Failed to create file: " + header.Filename)
@@ -139,6 +143,17 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Printf("filemeta:{ name:%s path:%s size:%d hash:%s }\n",
 			fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
+
+		// upload to ceph
+		// TODO : 异步复制到 Ceph / OSS
+		realFile.Seek(0, 0)
+		data, _ := ioutil.ReadAll(realFile)
+		cephPath := "/ceph/" + fileMeta.Hash
+		_ = ceph.PutObject("userfile", cephPath, data)
+		fileMeta.FilePath = cephPath
+		fmt.Printf("ceph: filemeta:{ name:%s path:%s size:%d hash:%s }\n",
+			fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
+
 		// store fileMeta
 		flag := meta.CreateFileMetaDB(fileMeta)
 		if flag == false {
