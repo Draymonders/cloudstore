@@ -7,24 +7,21 @@ import (
 )
 
 const (
-	bashLinux   = "/bin/sh"
-	bashWindows = "C:\\Program Files\\Git\\cmd\\git.exe"
+	// dirPath     = "/data/tmp/"
+	dirPath = "d:\\tmp\\"
 )
 
 func main() {
 	var cmd *exec.Cmd
-	filepath := "/d/tmp/root5d0dd1ec/"
-	filestore := "/d/tmp/2333.pdf"
-	command := "/d/tmp/mergeAll.sh " + filepath + " " + filestore
+	filepath := dirPath + "/root5d0dd1ec/"
+	filestore := dirPath + "1111111.pdf"
 
-	cmd = exec.Command(bashWindows, "-c", command)
-	cmd.Run()
-	if data, err := cmd.Output(); err != nil {
+	cmd = exec.Command(dirPath+"mergeAll.sh", filepath, filestore)
+	// cmd.Run()
+	if _, err := cmd.Output(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	} else {
-		for v := range data {
-			fmt.Println(v)
-		}
+		fmt.Println(filestore, " has been merge complete")
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"strconv"
 	"strings"
@@ -125,17 +126,34 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO : merge all datas to one data
+	// merge all datas to one data
 	// use shell to merge
 	// cat `ls | sort -n` > /tmp/filename
 
-	filePath := dirPath + "filename"
-
-	// 执行命令 cat `ls | sort -n` > filePath
+	filepath := dirPath + "/uploadid"
+	filestore := dirPath + filename
+	if _, err := mergeAllPartFile(filepath, filestore); err != nil {
+		w.Write(util.NewRespMsg(-2, "merge datas failed, please commit again...", nil).JSONByte())
+		return
+	}
 
 	// store file to DB
-	mydb.OnFileUploadFinished(filename, int64(filesize), filePath, filehash)
+	mydb.OnFileUploadFinished(filename, int64(filesize), filestore, filehash)
 	mydb.OnUserFileUploadFinished(username, filename, filehash, int64(filesize))
 
 	w.Write(util.NewRespMsg(0, "OK", nil).JSONByte())
+}
+
+// mergeAllPartFile: filepath： 分块存储的路径 filestore： 文件最终地址
+func mergeAllPartFile(filepath, filestore string) (bool, error) {
+	var cmd *exec.Cmd
+	cmd = exec.Command(mergeAllShell, filepath, filestore)
+
+	if _, err := cmd.Output(); err != nil {
+		fmt.Println(err)
+		return false, err
+	} else {
+		fmt.Println(filestore, " has been merge complete")
+		return true, nil
+	}
 }
