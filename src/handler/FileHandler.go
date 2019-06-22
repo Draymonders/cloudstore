@@ -81,9 +81,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "POST" {
 		// parse data from form
 		r.ParseForm()
-
 		username := getUserName(r)
-
 		// get the file from form
 		file, header, err := r.FormFile("file")
 		if err != nil {
@@ -95,7 +93,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		// real Path
 		filename := header.Filename
 		filepath := dirPath + filename
-
 		realFile, err := os.Create(filepath)
 		if err != nil {
 			fmt.Println("Failed to create file: " + header.Filename)
@@ -126,6 +123,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 					Code: 0,
 					Msg:  "秒传成功",
 				}
+				fmt.Println(filename, "秒传成功")
 				w.Write(resp.JSONByte())
 				return
 			}
@@ -137,6 +135,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(resp.JSONByte())
 			return
 		}
+
 		fileMeta := meta.FileMeta{
 			FileName: filename,
 			FileSize: filesize,
@@ -237,7 +236,6 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	newfilename := r.Form.Get("newfilename")
 
 	fmt.Println("FileMetaUpdateHandler: filename: ", filename, " newfilename: ", newfilename)
-
 	flag := meta.UpdateFileMetaFromfilenameDB(filename, newfilename)
 	if flag == false {
 		fmt.Printf("FileMetaUpdateHandler filename %s to %s error", filename, newfilename)
@@ -247,7 +245,6 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // TryFastUploadHandler : fast upload handler
-/*
 func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
@@ -290,4 +287,27 @@ func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONByte())
 	return
 }
+
+/*
+if _, err = meta.IsFileUploadedDB(hash); err == nil {
+			// file has store to local
+			// then only store data to tb_user_file
+			suc := mydb.OnUserFileUploadFinished(username,
+				filename, hash, int64(filesize))
+			if suc {
+				resp := util.RespMsg{
+					Code: 0,
+					Msg:  "秒传成功",
+				}
+				w.Write(resp.JSONByte())
+				return
+			}
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "秒传失败，请检查数据库数据",
+			}
+			StatusInternalServerError(w)
+			w.Write(resp.JSONByte())
+			return
+		}
 */

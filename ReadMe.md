@@ -1,8 +1,10 @@
 # 简易分布式对象存储 -- GO实现
 
 默认启动端口`80`
+
 linux默认存储路径`/data/tmp/`
-windows默认存储路径`D:\data\`
+
+windows默认存储路径`D:\tmp\`
 
 启动方式
 
@@ -28,7 +30,7 @@ Go `go version go1.12.5 windows/amd64`
 
 IDE `VSCode`
 
-## 备注
-[数据表的建立](./doc/table.sql)
-[MySQL主从同步](./doc/MySQL.md)
-[Redis主从同步](./doc/Redis.md)
+## 文档
+- [数据表的建立](./doc/table.sql)
+- [MySQL主从同步](./doc/MySQL.md)
+- [Redis主从同步](./doc/Redis.md)

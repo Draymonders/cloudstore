@@ -14,10 +14,15 @@ func main() {
 
 	// file upload (include fast upload)
 	http.HandleFunc("/file/upload", handler.HTTPInterceptor(handler.UploadHandler))
+	http.HandleFunc("/file/fastupload", handler.HTTPInterceptor(handler.TryFastUploadHandler))
+
+	// query file meta and query user_files
 	http.HandleFunc("/file/meta", handler.HTTPInterceptor(handler.GetFileMetaHandler))
 	http.HandleFunc("/file/query", handler.HTTPInterceptor(handler.QueryMultiHandler))
 
+	// file del(logic delete)
 	http.HandleFunc("/file/del", handler.HTTPInterceptor(handler.FileDeleteHandler))
+	// file update
 	http.HandleFunc("/file/update", handler.HTTPInterceptor(handler.FileMetaUpdateHandler))
 
 	// file down
