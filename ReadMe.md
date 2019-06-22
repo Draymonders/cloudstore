@@ -34,3 +34,5 @@ IDE `VSCode`
 - [数据表的建立](./doc/table.sql)
 - [MySQL主从同步](./doc/MySQL.md)
 - [Redis主从同步](./doc/Redis.md)
+- [分块上传原理](./doc/multiPartFileUpload.md)
+- [断点续传原理](./doc/BreakpointContinualTransfer.md)

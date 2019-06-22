@@ -67,7 +67,7 @@ func UploadPartHandler(w http.ResponseWriter, r *http.Request) {
 	rConn := rPool.RedisPool().Get()
 	defer rConn.Close()
 
-	fpath := "/data/" + uploadID + "/" + chunkIndex
+	fpath := dirPath + uploadID + "/" + chunkIndex
 	os.MkdirAll(path.Dir(fpath), 0744)
 	fd, err := os.Create(fpath)
 	if err != nil {
@@ -112,7 +112,7 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 	chunkCount := 0
 	for i := 0; i < len(data); i += 2 {
 		k := string(data[i].([]byte))
-		v := string(data[i].([]byte))
+		v := string(data[i+1].([]byte))
 		if k == "chunkcount" {
 			totalCount, _ = strconv.Atoi(v)
 		} else if strings.HasPrefix(k, "chkidx_") && v == "1" {
@@ -125,12 +125,16 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO : merge all datas
+	// TODO : merge all datas to one data
 	// use shell to merge
-	// cat `ls | sort -n` > /tmp/filehash
+	// cat `ls | sort -n` > /tmp/filename
 
-	// TODO : merge datas and return path store to DB
-	mydb.OnFileUploadFinished(filename, int64(filesize), "path233", filehash)
+	filePath := dirPath + "filename"
+
+	// 执行命令 cat `ls | sort -n` > filePath
+
+	// store file to DB
+	mydb.OnFileUploadFinished(filename, int64(filesize), filePath, filehash)
 	mydb.OnUserFileUploadFinished(username, filename, filehash, int64(filesize))
 
 	w.Write(util.NewRespMsg(0, "OK", nil).JSONByte())

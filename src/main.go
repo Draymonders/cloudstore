@@ -47,8 +47,8 @@ func main() {
 	http.HandleFunc("/user/signup", handler.SignUpHandler)
 	http.HandleFunc("/user/signin", handler.SignInHandler)
 	http.HandleFunc("/user/info", handler.HTTPInterceptor(handler.UserInfoHandler))
-	fmt.Println("server start , listen", listenPort)
 
+	fmt.Println("server start , listen", listenPort)
 	err := http.ListenAndServe(listenPort, nil)
 	if err != nil {
 		fmt.Println("server start failed err:" + err.Error() + "\n")
