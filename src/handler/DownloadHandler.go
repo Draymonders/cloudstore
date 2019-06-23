@@ -70,6 +70,21 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+	} else if strings.Contains(fileMeta.FilePath, "userfile") {
+		fmt.Println("to download file fom qiniu kodo...")
+		resp, err := http.Get("http://" + fileMeta.FilePath)
+		if err != nil {
+			fmt.Println("FileDownloadHandler: can not read data from URL: ", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
+		fileData, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("FileDownloadHandler: can not read data from response: ", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// set header

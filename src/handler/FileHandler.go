@@ -6,11 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"meta"
 	"net/http"
 	"os"
-	"store/ceph"
+	"store/kodo"
 	"strconv"
 	"util"
 )
@@ -18,14 +17,14 @@ import (
 // getUserName : get username
 func getUserName(r *http.Request) string {
 	username := r.Form.Get("username")
-	fmt.Println("get username : ", username)
+	// fmt.Println("get username : ", username)
 	return username
 }
 
 // getToken : get token
 func getToken(r *http.Request) string {
 	token := r.Form.Get("token")
-	fmt.Println("get token : ", token)
+	// fmt.Println("get token : ", token)
 	return token
 }
 
@@ -144,14 +143,28 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("filemeta:{ name:%s path:%s size:%d hash:%s }\n",
 			fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
 
+		// TODO : 异步复制到 Ceph / KODO
 		// upload to ceph
-		// TODO : 异步复制到 Ceph / OSS
-		realFile.Seek(0, 0)
-		data, _ := ioutil.ReadAll(realFile)
-		cephPath := "/ceph/" + fileMeta.Hash
-		_ = ceph.PutObject("userfile", cephPath, data)
-		fileMeta.FilePath = cephPath
-		fmt.Printf("ceph: filemeta:{ name:%s path:%s size:%d hash:%s }\n",
+		/*
+			realFile.Seek(0, 0)
+			data, _ := ioutil.ReadAll(realFile)
+			cephPath := "/ceph/" + fileMeta.Hash
+			_ = ceph.PutObject("userfile", cephPath, data)
+			fileMeta.FilePath = cephPath
+			fmt.Printf("ceph: filemeta:{ name:%s path:%s size:%d hash:%s }\n",
+				fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
+		*/
+
+		fileKey := "userfile/" + fileMeta.FileName
+		// upload to qiniu kodo
+		f := kodo.PutObject("test-kodo", fileMeta.FilePath, fileKey)
+		if f == false {
+			fmt.Println("put data to qiniu kodo failed")
+			StatusInternalServerError(w)
+			return
+		}
+		fileMeta.FilePath = kodo.GetObjectURL(fileKey)
+		fmt.Printf("kodo: filemeta:{ name:%s path:%s size:%d hash:%s }\n",
 			fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
 
 		// store fileMeta
@@ -210,8 +223,12 @@ func QueryMultiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for i, ufile := range userFiles {
 		userFiles[i].DownLoadUrl = DownloadURLHandler(r, ufile.Hash)
-		fmt.Printf("username:%s filename:%s size:%d hash:%s url:%s\n", ufile.Username, ufile.FileName, ufile.FileSize,
-			ufile.Hash, ufile.DownLoadUrl)
+
+		/*
+			fmt.Printf("username:%s filename:%s size:%d hash:%s url:%s\n", userFiles[i].Username, userFiles[i].FileName, userFiles[i].FileSize,
+				userFiles[i].Hash, userFiles[i].DownLoadUrl)
+		*/
+		fmt.Printf("username: %s filename: %s\n", ufile.Username, ufile.FileName)
 	}
 
 	data, err := json.Marshal(userFiles)

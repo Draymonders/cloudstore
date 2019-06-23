@@ -16,6 +16,13 @@
   </script>
 
   <script src="/static/js/auth.js"></script>
+  <style>
+    a{ 
+      text-decoration:none; 
+      out-line: none;
+      color:#333; 
+    } 
+  </style>
 </head>
 
 <body style="width:100%;height:100%">
@@ -42,6 +49,7 @@
             <div style="width:100%;height: 100%;background:rgb(202, 157, 248);"></div>
           </td>
           <td style="text-align: top;">
+            <br>
             <div>文件列表
               <button class="btn btn-success" onclick="toUploadFile()" style="float: right;margin-right: 30px;">上传文件
               </button>
@@ -129,7 +137,7 @@
           cell.innerHTML = data[i].LastEditTime;
 
           cell = x.insertCell();
-          cell.innerHTML = "<a href='"+data[i].DownLoadUrl+"'>点击下载</a>";
+          cell.innerHTML = "<button class='btn btn-success'><a href='"+ data[i].DownLoadUrl  +"'>下载</button>";
         }
       }
     });
@@ -138,7 +146,6 @@
   function toUploadFile() {
     window.location.href = '/file/upload?' + queryParams();
   }
-
 </script>
 
 </html>
