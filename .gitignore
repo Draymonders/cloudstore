@@ -9,7 +9,6 @@ bin/
 bin
 
 src/golang.org/
-
 /src/golang.org/
 
 /src/config/link.go

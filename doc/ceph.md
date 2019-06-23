@@ -1,3 +1,6 @@
+## ceph
+[![Z9xOlq.md.jpg](https://s2.ax1x.com/2019/06/23/Z9xOlq.md.jpg)](https://imgchr.com/i/Z9xOlq)
+
 ## ceph集群docker部署
 通过docker可以快速部署小规模Ceph集群的流程，可用于开发测试。
 以下的安装流程是通过linux shell来执行的；假设你只有一台机器，装了linux(如Ubuntu)系统和docker环境，那么可以参考以下步骤安装Ceph:

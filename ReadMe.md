@@ -18,10 +18,10 @@ go run main.go
 - [x] Redis主从复制 + shell脚本故障转移
 - [x] 秒传功能
 - [x] 分块上传
-- [x] 断点续传
+- [x] ~~断点续传~~
 - [x] Ceph 私有云存储
-- [ ] OSS 公有云存储
-- [ ] 异步复制 
+- [x] Kodo 公有云存储 (七牛云对象存储)
+- [ ] Rabbitmq异步复制 
 - [ ] 微服务改造
 ## 开发环境参数
 Go `go version go1.12.5 windows/amd64`
@@ -37,3 +37,4 @@ IDE `VSCode`
 - [分块上传原理](./doc/multiPartFileUpload.md)
 - [断点续传原理](./doc/BreakpointContinualTransfer.md)
 - [Ceph私有云存储实践](./doc/ceph.md)
+- [七牛云kodo使用体验](./doc/kodo.md)
