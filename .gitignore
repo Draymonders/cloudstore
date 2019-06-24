@@ -1,14 +1,2 @@
-pkg/
-/pkg/
-
-.idea/
-/idea/
-
-bin/
-/bin/
-bin
-
-
-/src/config/link.go
-./src/config/link.go
-
+config/link.go
+./config/link.go
