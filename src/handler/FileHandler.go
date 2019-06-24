@@ -6,13 +6,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"meta"
+	"mq"
 	"net/http"
 	"os"
+	"store/ceph"
 	"store/kodo"
 	"strconv"
 	"util"
 )
+
+func init() {
+	// 目录已经存在
+	if _, err := os.Stat(DirPath); err == nil {
+		return
+	}
+	// 尝试创建目录
+	err := os.MkdirAll(DirPath, 0744)
+	if err != nil {
+		fmt.Println("无法创建临时存储目录，程序将退出")
+		os.Exit(1)
+	}
+}
 
 // getUserName : get username
 func getUserName(r *http.Request) string {
@@ -79,7 +95,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		// parse data from form
 		r.ParseForm()
 		username := getUserName(r)
-		// get the file from form
+		// 1. 从form表单中获得文件内容句柄
 		file, header, err := r.FormFile("file")
 		if err != nil {
 			fmt.Println("Failed to read file from form, err:", err.Error())
@@ -90,7 +106,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		filename := header.Filename
 		filepath := DirPath + filename
-		// real file store in os
+		// 2. 创建本地临时文件
 		realFile, err := os.Create(filepath)
 		if err != nil {
 			fmt.Println("Failed to create file: " + header.Filename)
@@ -98,6 +114,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer realFile.Close()
+		// 3. 复制文件，并且计算大小
 		filesize, err := io.Copy(realFile, file)
 		if err != nil {
 			fmt.Println("Failed move file to newFile, err", err.Error())
@@ -107,10 +124,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		// TODO split to Hash service
 
-		// store Hash
+		// 4. 计算Hash
 		realFile.Seek(0, 0)
 		hash := util.FileMD5(realFile)
 
+		// 5. 判断之前是否上传过，如果上传过，则只在用户文件表添加记录
 		if _, err = meta.IsFileUploadedDB(hash); err == nil {
 			// file has store to local
 			// then only store data to tb_user_file
@@ -133,7 +151,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(resp.JSONByte())
 			return
 		}
-
+		// 6. 记录文件元数据信心
 		fileMeta := meta.FileMeta{
 			FileName: filename,
 			FileSize: filesize,
@@ -143,9 +161,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("filemeta:{ name:%s path:%s size:%d hash:%s }\n",
 			fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
 
-		// TODO : 异步复制到 Ceph / KODO
-		// upload to ceph
-		/*
+		// 7. 同步或异步将文件转移到oss
+		if CurrentStoreType == StoreCeph {
 			realFile.Seek(0, 0)
 			data, _ := ioutil.ReadAll(realFile)
 			cephPath := "/ceph/" + fileMeta.Hash
@@ -153,21 +170,42 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			fileMeta.FilePath = cephPath
 			fmt.Printf("ceph: filemeta:{ name:%s path:%s size:%d hash:%s }\n",
 				fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
-		*/
+		} else if CurrentStoreType == StoreKodo {
+			fileKey := "userfile/" + fileMeta.FileName
+			if !AsyncTransferEnable {
+				fmt.Println("kdo sync...")
+				// 同步上传到 qiniu kodo
+				f := kodo.PutObject(KodoBucket, fileMeta.FilePath, fileKey)
+				if f == false {
+					fmt.Println("put data to qiniu kodo failed")
+					StatusInternalServerError(w)
+					return
+				}
+				fileMeta.FilePath = kodo.GetObjectURL(fileKey)
+			} else {
+				fmt.Println("kodo async...")
+				data := mq.TransferData{
+					FileHash:      fileMeta.Hash,
+					CurPath:       fileMeta.FilePath,
+					DestPath:      fileKey,
+					DestStoreType: StoreKodo,
+				}
+				pubData, _ := json.Marshal(data)
+				pubSuc := mq.Publish(
+					TransExchangeName,
+					TransKodoRoutingKey,
+					pubData,
+				)
+				if !pubSuc {
+					// TODO : 当前转移信息发送失败，稍后重试
+				}
+			}
 
-		fileKey := "userfile/" + fileMeta.FileName
-		// upload to qiniu kodo
-		f := kodo.PutObject("test-kodo", fileMeta.FilePath, fileKey)
-		if f == false {
-			fmt.Println("put data to qiniu kodo failed")
-			StatusInternalServerError(w)
-			return
+			fmt.Printf("kodo: filemeta:{ name:%s path:%s size:%d hash:%s }\n",
+				fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
 		}
-		fileMeta.FilePath = kodo.GetObjectURL(fileKey)
-		fmt.Printf("kodo: filemeta:{ name:%s path:%s size:%d hash:%s }\n",
-			fileMeta.FileName, fileMeta.FilePath, fileMeta.FileSize, fileMeta.Hash)
 
-		// store fileMeta
+		// 8. 更新文件表和用户文件表
 		flag := meta.CreateFileMetaDB(fileMeta)
 		if flag == false {
 			fmt.Println(header.Filename + " store meta to file db error")

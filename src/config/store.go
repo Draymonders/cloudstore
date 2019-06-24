@@ -9,10 +9,13 @@ const (
 	StoreLocal
 	// StoreCeph : Ceph集群
 	StoreCeph
-	// StoreOSS : ali OSS
-	StoreOSS
+	// StoreKodo : qiniu kodo
+	StoreKodo
 	// StoreMix : Ceph and OSS
 	StoreMix
 	// StoreAll : all store
 	StoreAll
 )
+
+// CurrentStoreType : 当前存储类型
+const CurrentStoreType = StoreKodo

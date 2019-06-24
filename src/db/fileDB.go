@@ -158,3 +158,27 @@ func OnFileMetaUpdate(oldfilename, newfilename string) bool {
 	}
 	return false
 }
+
+// UpdateFilePath : 文件异步上传完后，需要回写数据库
+func UpdateFilePath(hash, filepath string) bool {
+	stmt, err := mydb.DBConn().Prepare(
+		"update tb_file set filepath=? where hash = ? limit 1")
+	if err != nil {
+		fmt.Println("Failded to prepare statement, err: ", err.Error())
+		return false
+	}
+	defer stmt.Close()
+	res, err := stmt.Exec(filepath, hash)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	if nums, err := res.RowsAffected(); err == nil {
+		if nums <= 0 {
+			fmt.Println("File update path err:", err.Error())
+			return false
+		}
+		return true
+	}
+	return false
+}
