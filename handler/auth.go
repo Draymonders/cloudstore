@@ -3,27 +3,25 @@ package handler
 import (
 	"cloudstore/util"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-// HTTPInterceptor : vertify user info
-func HTTPInterceptor(handler http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			r.ParseForm()
-			username := r.Form.Get("username")
-			token := r.Form.Get("token")
-
-			// check user and token
-			// if no error then next
-			if len(username) < 3 || !IsTokenValid(token) {
-				resp := util.NewRespMsg(
-					util.StatusInvalidToken,
-					"token无效",
-					nil,
-				)
-				w.Write(resp.JSONByte())
-				return
-			}
-			handler(w, r)
-		})
+func HTTPInterceptor(c *gin.Context) {
+	return func(c *gin.Context) {
+		username := c.Request.FormValue("username")
+		token := c.Request.FormValue("token")
+		if len(username) < 3 || !IsTokenValid(token) {
+			// 直接终止，不接着往下走了
+			c.Abort()
+			resp := util.NewRespMsg(
+				util.StatusInvalidToken,
+				"token无效",
+				nil,
+			)
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		c.Next()
+	}
 }

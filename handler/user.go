@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -13,113 +15,135 @@ const (
 	tokenSalt = "_tokenSalt"
 )
 
-// SignUpHandler : sign up handler
-func SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		http.Redirect(w, r, "/static/view/signup.html", http.StatusFound)
-		return
-	} else if r.Method == http.MethodPost {
-		// parse form from post
-		r.ParseForm()
-
-		// 1. get username and password
-		username := r.Form.Get("username")
-		passwd := r.Form.Get("password")
-		fmt.Printf("sign up user: %s passwd : %s\n", username, passwd)
-		// check username and password valid
-		if len(username) < 3 || len(passwd) < 5 {
-			w.Write([]byte("账户密码设置不合法"))
-			return
-		}
-		// 2. encry password user Md5 and salt
-		encPasswd := util.MD5([]byte(passwd + pwdSalt))
-		fmt.Printf("sign up user: %s encPasswd : %s\n", username, encPasswd)
-		// 3. store username and password to DB
-		suc := mydb.UserSignUp(username, encPasswd)
-		if suc {
-			w.Write([]byte("OK"))
-		} else {
-			w.Write([]byte("Sign Up error"))
-		}
-	}
+// SignUpHandler : 注册界面
+func SignUpHandler(c *gin.Context) {
+	c.Redirect(http.StatusFound, "/static/view/signup.html")
 }
 
-// SignInHandler : sign in handler
-func SignInHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		http.Redirect(w, r, "/static/view/signin.html", http.StatusFound)
-		return
-	} else if r.Method == http.MethodPost {
-		// parse form from post
-		r.ParseForm()
-		// 1. get username and password
-		username := r.Form.Get("username")
-		passwd := r.Form.Get("password")
-		// check username and password valid
-		if len(username) < 3 || len(passwd) < 5 {
-			w.Write([]byte("Invalid parameter"))
-			return
-		}
-
-		// 2. encry password user Md5 and salt
-		encPasswd := util.MD5([]byte(passwd + pwdSalt))
-
-		// 3. check if username exists in DB
-		suc := mydb.UserSignin(username, encPasswd)
-		if !suc {
-			w.Write([]byte("Username or Passwrod error"))
-			return
-		}
-
-		// 4. generate token and store to DB
-		token := GenToken(username)
-		suc = mydb.UpdateToken(username, token)
-		if !suc {
-			w.Write([]byte("token update failed"))
-			return
-		}
-
-		// 5. sign in ok
-		// store token to client
-		resp := util.NewRespMsg(util.StatusOK, "OK", struct {
-			Location string
-			Username string
-			Token    string
-		}{
-			Location: "http://" + r.Host + "/static/view/home.html",
-			Username: username,
-			Token:    token,
+// DoSignUpHandler : 注册用户
+func DoSignUpHandler(c *gin.Context) {
+	// 1. 获取用户名和密码
+	username := c.Request.FormValue("username")
+	passwd := c.Request.FormValue("password")
+	// 2. 判断参数是否合法
+	if len(username) < 3 || len(passwd) < 5 {
+		c.JSON(http.StatusOK, gin.H{
+			"msg":  "请求参数无效",
+			"code": util.StatusRegisterFailed,
 		})
-		fmt.Printf("user :%s, resp:%s\n", username, resp.JSONString())
-		w.Write(resp.JSONByte())
+		return
 	}
+	// 3. 对密码进行加盐及取MD5值加密
+	encPasswd := util.MD5([]byte(passwd + config.pwdSalt))
+
+	// 4. 向file表存储记录
+	suc := mydb.UserSignUp(username, encPasswd)
+	if suc {
+		c.JSON(http.StatusOK, gin.H{
+			"msg":  "注册成功",
+			"code": util.StatusOK,
+		})
+
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"msg": "注册失败",
+			"code": util.StatusRegisterFailed
+		})
+	}
+	return
+}
+
+// SignInHandler : 登陆页面
+func SignInHandler(c *gin.Context) {
+	c.Redirect(http.StatusFound, "/static/view/signin.html")
+	return 
+}
+
+
+// SignInHandler : sign in handler
+func DoSignInHandler(c *gin.Context) {
+	// 1. 获取账号密码
+	username := r.Request.FormValue("username")
+	passwd := c.Request.FormValue("password")
+	// 2. 判断参数是否合法
+	if len(username) < 3 || len(passwd) < 5 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg":  "请求参数无效",
+			"code": util.StatusLoginFailed
+		})
+		return
+	}
+
+	// 3. 对密码进行加盐及取MD5值加密
+	encPasswd := util.MD5([]byte(passwd + config.pwdSalt))
+
+	// 4. 检查用户名以及密码是否在db中
+	suc := mydb.UserSignin(username, encPasswd)
+	if !suc {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg":  "用户名或密码错误",
+			"code": util.StatusLoginFailed
+		})
+		return
+	}
+
+	// 5. 生成token并且存到db中
+	token := GenToken(username)
+	suc = mydb.UpdateToken(username, token)
+	if !suc {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg":  "生成Token错误",
+			"code": util.StatusLoginFailed
+		})
+		return
+	}
+
+	// 6. 登陆成功
+	resp := util.NewRespMsg(util.StatusOK, "OK", struct {
+		Location string
+		Username string
+		Token    string
+	}{
+		Location: "/static/view/home.html",
+		Username: username,
+		Token:    token,
+	})
+	fmt.Printf("user :%s, resp:%s\n", username, resp.JSONString())
+	c.Data(http.StatusOK, "application/json", resp.JSONByte())
 }
 
 // UserInfoHandler : user info search handler
-func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. parse form from post
-	username := r.Form.Get("username")
-	token := r.Form.Get("token")
-	// 2. check if token valid
+func UserInfoHandler(c *gin.Context) {
+	// 1. 获取参数
+	username := c.Request.FormValue("username")
+	token := c.Request.FormValue("token")
+	// 2. 判断token是否合法
 	isValidToken := IsTokenValid(token)
 	if !isValidToken {
-		w.Write([]byte("token has valid, please log in again"))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg" : "token无效，请重新登陆",
+			"code" : util.StatusInvalidToken
+		})
 		return
 	}
-	// 3. search user info
+	// 3. 检索相关用户的信息
 	user, err := mydb.GetUserInfo(username)
 	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg" : "查询用户信息失败",
+			"code" : util.StatusServerError
+		})
 		return
 	}
+	// 4. 返回用户信息
 	resp := util.NewRespMsg(util.StatusOK, "OK", user)
-	w.Write(resp.JSONByte())
+	c.Data(http.StatusOK, "application/json", resp.JSONByte())
 }
 
 // GenToken : generate token of username
 func GenToken(username string) string {
 	timestamp := fmt.Sprintf("%x", time.Now().Unix())
-	tokenPrefix := util.MD5([]byte(username + timestamp + tokenSalt))
+	tokenPrefix := util.MD5([]byte(username + timestamp + config.tokenSalt))
 	token := tokenPrefix + timestamp[:8]
 	fmt.Printf("username: %s Token: %s\n", username, token)
 	return token

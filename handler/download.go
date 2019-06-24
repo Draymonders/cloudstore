@@ -11,38 +11,37 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // DownloadURLHandler : generate the file url
-func DownloadURLHandler(r *http.Request, filehash string) string {
-	// filehash := getHash(r)
-	username := getUserName(r)
-	token := getToken(r)
+func DownloadURLHandler(host, username, token, filehash string) string {
 	tmpURL := fmt.Sprintf(
-		"http://%s/file/download?hash=%s&username=%s&token=%s", r.Host, filehash, username, token)
+		"http://%s/file/download?hash=%s&username=%s&token=%s", host, filehash, username, token)
 	// w.Write([]byte(tmpURL))
 	return tmpURL
 }
 
-// FileDownloadHandler : download file
-func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	// 解析Form
-	r.ParseForm()
-	hash := getHash(r)
-	username := getUserName(r)
+// FileDownloadHandler : 下载文件
+func FileDownloadHandler(c *gin.Context) {
+	hash := c.Request.FormValue("hash")
+	username := c.Request.FormValue("username")
 	fmt.Println("FileDownloadHandler: hash: ", hash)
 	fileMeta, err := meta.IsFileUploadedDB(hash)
 	if err != nil {
-		fmt.Println("FileDownloadHandler: query file hash failed, err :", err.Error())
-		StatusInternalServerError(w)
-		w.Write(util.NewRespMsg(-1, "query file through hash failed", nil).JSONByte())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg" : "通过hash查询file表失败"
+			"code" : util.StatusQueryFileError
+		})
 		return
 	}
 	userFile, err := db.QueryUserFileMeta(username, hash)
 	if err != nil {
-		fmt.Println("FileDownloadHandler: query userfile failed, err :", err.Error())
-		StatusInternalServerError(w)
-		w.Write(util.NewRespMsg(-1, "get UserFile through hash and username failed", nil).JSONByte())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg" : "查询user file表失败"
+			"code" : util.StatusQueryUserFilesError
+		})
 		return
 	}
 	var fileData []byte
@@ -50,80 +49,90 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("to download file from local...")
 		file, err := os.Open(fileMeta.FilePath)
 		if err != nil {
-			fmt.Println("FileDownloadHandler: can not find the file: ", fileMeta.FilePath)
-			w.WriteHeader(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg" : "文件打开失败"
+				"code" : util.StatusFileOpenError
+			})
 			return
 		}
 		// close the file
 		defer file.Close()
 		fileData, err = ioutil.ReadAll(file)
 		if err != nil {
-			fmt.Println("FileDownloadHandler: can not read data from file: ", err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg" : "文件读取失败"
+				"code" : util.StatusFileReadError
+			})
 			return
 		}
 	} else if strings.HasPrefix(fileMeta.FilePath, "/ceph") {
 		fmt.Println("to download file from ceph...")
 		fileData, err = ceph.GetObject("userfile", fileMeta.FilePath)
 		if err != nil {
-			fmt.Println("FileDownloadHandler: can not read data from file: ", err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg" : "文件读取失败"
+				"code" : util.StatusFileReadError
+			})
 			return
 		}
 	} else if strings.Contains(fileMeta.FilePath, "userfile") {
 		fmt.Println("to download file fom qiniu kodo...")
 		resp, err := http.Get("http://" + config.KodoDomain + "/" + fileMeta.FilePath)
 		if err != nil {
-			fmt.Println("FileDownloadHandler: can not read data from URL: ", err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg" : "文件读取失败"
+				"code" : util.StatusFileReadError
+			})
 			return
 		}
 		defer resp.Body.Close()
 		fileData, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Println("FileDownloadHandler: can not read data from response: ", err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"msg" : "文件读取从Resp中读取失败"
+				"code" : util.StatusFileReadError
+			})
 			return
 		}
 	}
-
-	// set header
-	w.Header().Set("Content-Type", "application/octect-stream")
 	// attachment表示文件将会提示下载到本地，而不是直接在浏览器中打开
-	w.Header().Set("content-disposition", "attachment; filename=\""+userFile.FileName+"\"")
-
+	c.Header("content-disposition", "attachment; filename=\""+userFile.FileName+"\"")
 	// write data to client
-	w.Write(fileData)
+	c.Data(http.StatusOk,"application/octect-stream",fileData)
 }
 
 // RangeDownloadHandler : download range interface
-func RangeDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	hash := getHash(r)
-	username := getUserName(r)
+func RangeDownloadHandler(c *gin.Context) {
+	hash := c.Request.FormValue("hash")
+	username := c.Request.FormValue("username")
 	fileMeta, err := meta.IsFileUploadedDB(hash)
 	if err != nil {
-		fmt.Println("RangeDownloadHandler: query file hash failed, err :", err.Error())
-		StatusInternalServerError(w)
-		w.Write(util.NewRespMsg(-1, "query file through hash failed", nil).JSONByte())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg" : "通过hash查询file表失败"
+			"code" : util.StatusQueryFileError
+		})
 		return
 	}
 	userfile, err := db.QueryUserFileMeta(username, hash)
 	if err != nil {
-		fmt.Println("RangeDownloadHandler: query userfile failed, err :", err.Error())
-		StatusInternalServerError(w)
-		w.Write(util.NewRespMsg(-1, "get UserFile through hash and username failed", nil).JSONByte())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg" : "查询user file表失败"
+			"code" : util.StatusQueryUserFilesError
+		})
 		return
 	}
 	f, err := os.Open(fileMeta.FilePath)
 	if err != nil {
-		fmt.Println("RangeDownloadHandler: can not find the file: ", fileMeta.FilePath)
-		w.WriteHeader(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg" : "文件打开失败"
+			"code" : util.StatusFileOpenError
+		})
 		return
 	}
 	defer f.Close()
-	w.Header().Set("Content-Type", "application/octect-stream")
 	// attachment表示文件将会提示下载到本地，而不是直接在浏览器中打开
-	w.Header().Set("content-disposition", "attachment; filename=\""+userfile.FileName+"\"")
-	http.ServeFile(w, r, fileMeta.FilePath)
+	c.Header("content-disposition", "attachment; filename=\""+userFile.FileName+"\"")
+	// write data to client
+	c.Data(http.StatusOk,"application/octect-stream",fileData)
+	http.ServeFile(c.Writer, c.Request, fileMeta.FilePath)
 }

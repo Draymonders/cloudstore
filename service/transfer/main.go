@@ -26,8 +26,9 @@ func ProcessTransfer(msg []byte) bool {
 		fmt.Println("上传到Kodo错误，请稍后重试")
 		return false
 	}
+	destPath := kodo.GetObjectURL(pubData.DestPath)
 	// 回写数据库
-	updateSuc := mydb.UpdateFilePath(pubData.FileHash, pubData.DestPath)
+	updateSuc := mydb.UpdateFilePath(pubData.FileHash, destPath)
 	if !updateSuc {
 		fmt.Println("filepath更新失败，请稍后重试")
 		return false
