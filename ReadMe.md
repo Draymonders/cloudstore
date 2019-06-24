@@ -38,3 +38,4 @@ go run main.go
 - [断点续传原理](./doc/BreakpointContinualTransfer.md)
 - [Ceph 私有云存储实践](./doc/ceph.md)
 - [七牛云 kodo 使用体验](./doc/kodo.md)
+- [RabbitMQ 使用体验](./doc/rabbitmq.md)
