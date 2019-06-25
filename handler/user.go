@@ -34,7 +34,7 @@ func DoSignUpHandler(c *gin.Context) {
 		return
 	}
 	// 3. 对密码进行加盐及取MD5值加密
-	encPasswd := util.MD5([]byte(passwd + config.pwdSalt))
+	encPasswd := util.MD5([]byte(passwd + pwdSalt))
 
 	// 4. 向file表存储记录
 	suc := mydb.UserSignUp(username, encPasswd)
@@ -46,8 +46,8 @@ func DoSignUpHandler(c *gin.Context) {
 
 	} else {
 		c.JSON(http.StatusOK, gin.H{
-			"msg": "注册失败",
-			"code": util.StatusRegisterFailed
+			"msg":  "注册失败",
+			"code": util.StatusRegisterFailed,
 		})
 	}
 	return
@@ -56,33 +56,32 @@ func DoSignUpHandler(c *gin.Context) {
 // SignInHandler : 登陆页面
 func SignInHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/static/view/signin.html")
-	return 
+	return
 }
 
-
-// SignInHandler : sign in handler
+// DoSignInHandler : sign in handler
 func DoSignInHandler(c *gin.Context) {
 	// 1. 获取账号密码
-	username := r.Request.FormValue("username")
+	username := c.Request.FormValue("username")
 	passwd := c.Request.FormValue("password")
 	// 2. 判断参数是否合法
 	if len(username) < 3 || len(passwd) < 5 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg":  "请求参数无效",
-			"code": util.StatusLoginFailed
+			"code": util.StatusLoginFailed,
 		})
 		return
 	}
 
 	// 3. 对密码进行加盐及取MD5值加密
-	encPasswd := util.MD5([]byte(passwd + config.pwdSalt))
+	encPasswd := util.MD5([]byte(passwd + pwdSalt))
 
 	// 4. 检查用户名以及密码是否在db中
 	suc := mydb.UserSignin(username, encPasswd)
 	if !suc {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg":  "用户名或密码错误",
-			"code": util.StatusLoginFailed
+			"code": util.StatusLoginFailed,
 		})
 		return
 	}
@@ -93,7 +92,7 @@ func DoSignInHandler(c *gin.Context) {
 	if !suc {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"msg":  "生成Token错误",
-			"code": util.StatusLoginFailed
+			"code": util.StatusLoginFailed,
 		})
 		return
 	}
@@ -121,8 +120,8 @@ func UserInfoHandler(c *gin.Context) {
 	isValidToken := IsTokenValid(token)
 	if !isValidToken {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"msg" : "token无效，请重新登陆",
-			"code" : util.StatusInvalidToken
+			"msg":  "token无效，请重新登陆",
+			"code": util.StatusInvalidToken,
 		})
 		return
 	}
@@ -130,8 +129,8 @@ func UserInfoHandler(c *gin.Context) {
 	user, err := mydb.GetUserInfo(username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg" : "查询用户信息失败",
-			"code" : util.StatusServerError
+			"msg":  "查询用户信息失败",
+			"code": util.StatusServerError,
 		})
 		return
 	}
@@ -143,13 +142,13 @@ func UserInfoHandler(c *gin.Context) {
 // GenToken : generate token of username
 func GenToken(username string) string {
 	timestamp := fmt.Sprintf("%x", time.Now().Unix())
-	tokenPrefix := util.MD5([]byte(username + timestamp + config.tokenSalt))
+	tokenPrefix := util.MD5([]byte(username + timestamp + tokenSalt))
 	token := tokenPrefix + timestamp[:8]
 	fmt.Printf("username: %s Token: %s\n", username, token)
 	return token
 }
 
-// isTokenValid : TODO check if token valid
+// IsTokenValid : TODO check if token valid
 func IsTokenValid(token string) bool {
 	if len(token) != 40 {
 		return false

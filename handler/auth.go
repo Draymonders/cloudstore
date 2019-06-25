@@ -7,7 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HTTPInterceptor(c *gin.Context) {
+// HTTPInterceptor : 权限认证
+func HTTPInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		username := c.Request.FormValue("username")
 		token := c.Request.FormValue("token")

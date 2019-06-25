@@ -19,8 +19,8 @@
   <style>
     a{ 
       text-decoration:none; 
-      out-line: none;
-      color:#333; 
+      /*out-line: none;*/
+      color:#FFF; 
     } 
   </style>
 </head>
@@ -39,6 +39,7 @@
             <div style="text-align: top;height:20%;margin: 10px 0 0 10px;">
               <center>
               <img style="width:80px;height:80px;" src="/static/img/avatar.jpeg"></img><br>
+              <br>
               用户名: <p id="username" style="font-size:18px; color: seagreen"></p>
               注册时间: <p id="createtime" style="color: seagreen"></p>
               </center>
@@ -61,10 +62,10 @@
                   <tr style="height:50px;border:1px;">
                     <th>文件名</th>
                     <th>文件大小</th>
-                    <th>文件hash</th>
+                    <!-- <th>文件hash</th> -->
                     <th>上传时间</th>
                     <th>最近更新</th>
-                    <th>下载</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
               </table>
@@ -86,12 +87,11 @@
           alert(err);
       },
       success: function (body) {
-        var resp = JSON.parse(body);
-        if (resp.code == 10005) {
+        if (body.code != 0) {
           window.location.href = "/static/view/signin.html";
         }
-        document.getElementById("username").innerHTML = resp.data.Username;
-        document.getElementById("createtime").innerHTML = resp.data.CreateTime;
+        document.getElementById("username").innerHTML = body.data.Username;
+        document.getElementById("createtime").innerHTML = body.data.CreateTime;
         updateFileList();
       }
     });
@@ -108,10 +108,7 @@
           alert(err);
       },
       success: function (body) {
-        if (!body) {
-          return;
-        }
-        var data = JSON.parse(body);
+        var data = body;
         console.log(data)
         if (!data || data.length <= 0) {
           return;
@@ -124,11 +121,11 @@
           cell.innerHTML = data[i].FileName;
 
           cell = x.insertCell();
-          cell.innerHTML = data[i].FileSize+"B";
-
+          cell.innerHTML = resize(data[i].FileSize);
+          /*
           var cell = x.insertCell();
-          cell.innerHTML = data[i].Hash; //.substr(0, 20) + "...";
-
+          cell.innerHTML = data[i].Hash; 
+          */
 
           cell = x.insertCell();
           cell.innerHTML = data[i].CreateTime;
@@ -145,6 +142,22 @@
 
   function toUploadFile() {
     window.location.href = '/file/upload?' + queryParams();
+  }
+
+  function resize(data) {
+    console.log(data)
+    var res = ""
+    if(data < 1024)
+      res = keepTwoDecimal(data) + "B"
+    else if(data < 1024*1024)
+      res = keepTwoDecimal(data/1024) + "KB"
+    else if(data < 1024*1024*1024) 
+      res = keepTwoDecimal(data/(1024*1024)) + "MB"
+    return res
+  }
+
+  function keepTwoDecimal(data) {
+    return Math.floor(data * 100) / 100
   }
 </script>
 

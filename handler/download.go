@@ -31,16 +31,16 @@ func FileDownloadHandler(c *gin.Context) {
 	fileMeta, err := meta.IsFileUploadedDB(hash)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg" : "通过hash查询file表失败"
-			"code" : util.StatusQueryFileError
+			"msg":  "通过hash查询file表失败",
+			"code": util.StatusQueryFileError,
 		})
 		return
 	}
 	userFile, err := db.QueryUserFileMeta(username, hash)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg" : "查询user file表失败"
-			"code" : util.StatusQueryUserFilesError
+			"msg":  "查询user file表失败",
+			"code": util.StatusQueryUserFilesError,
 		})
 		return
 	}
@@ -50,8 +50,8 @@ func FileDownloadHandler(c *gin.Context) {
 		file, err := os.Open(fileMeta.FilePath)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"msg" : "文件打开失败"
-				"code" : util.StatusFileOpenError
+				"msg":  "文件打开失败",
+				"code": util.StatusFileOpenError,
 			})
 			return
 		}
@@ -60,8 +60,8 @@ func FileDownloadHandler(c *gin.Context) {
 		fileData, err = ioutil.ReadAll(file)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"msg" : "文件读取失败"
-				"code" : util.StatusFileReadError
+				"msg":  "文件读取失败",
+				"code": util.StatusFileReadError,
 			})
 			return
 		}
@@ -70,8 +70,8 @@ func FileDownloadHandler(c *gin.Context) {
 		fileData, err = ceph.GetObject("userfile", fileMeta.FilePath)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"msg" : "文件读取失败"
-				"code" : util.StatusFileReadError
+				"msg":  "文件读取失败",
+				"code": util.StatusFileReadError,
 			})
 			return
 		}
@@ -80,8 +80,8 @@ func FileDownloadHandler(c *gin.Context) {
 		resp, err := http.Get("http://" + config.KodoDomain + "/" + fileMeta.FilePath)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"msg" : "文件读取失败"
-				"code" : util.StatusFileReadError
+				"msg":  "文件读取失败",
+				"code": util.StatusFileReadError,
 			})
 			return
 		}
@@ -89,8 +89,8 @@ func FileDownloadHandler(c *gin.Context) {
 		fileData, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"msg" : "文件读取从Resp中读取失败"
-				"code" : util.StatusFileReadError
+				"msg":  "文件读取从Resp中读取失败",
+				"code": util.StatusFileReadError,
 			})
 			return
 		}
@@ -98,7 +98,7 @@ func FileDownloadHandler(c *gin.Context) {
 	// attachment表示文件将会提示下载到本地，而不是直接在浏览器中打开
 	c.Header("content-disposition", "attachment; filename=\""+userFile.FileName+"\"")
 	// write data to client
-	c.Data(http.StatusOk,"application/octect-stream",fileData)
+	c.Data(http.StatusOK, "application/octect-stream", fileData)
 }
 
 // RangeDownloadHandler : download range interface
@@ -108,31 +108,32 @@ func RangeDownloadHandler(c *gin.Context) {
 	fileMeta, err := meta.IsFileUploadedDB(hash)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg" : "通过hash查询file表失败"
-			"code" : util.StatusQueryFileError
+			"msg":  "通过hash查询file表失败",
+			"code": util.StatusQueryFileError,
 		})
 		return
 	}
-	userfile, err := db.QueryUserFileMeta(username, hash)
+	_, err = db.QueryUserFileMeta(username, hash)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg" : "查询user file表失败"
-			"code" : util.StatusQueryUserFilesError
+			"msg":  "查询user file表失败",
+			"code": util.StatusQueryUserFilesError,
 		})
 		return
 	}
 	f, err := os.Open(fileMeta.FilePath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg" : "文件打开失败"
-			"code" : util.StatusFileOpenError
+			"msg":  "文件打开失败",
+			"code": util.StatusFileOpenError,
 		})
 		return
 	}
 	defer f.Close()
 	// attachment表示文件将会提示下载到本地，而不是直接在浏览器中打开
-	c.Header("content-disposition", "attachment; filename=\""+userFile.FileName+"\"")
+	c.Header("content-disposition", "attachment; filename=\""+fileMeta.FileName+"\"")
 	// write data to client
-	c.Data(http.StatusOk,"application/octect-stream",fileData)
 	http.ServeFile(c.Writer, c.Request, fileMeta.FilePath)
+	c.JSON(http.StatusOK, util.NewRespMsg(util.StatusOK, "文件传输完毕", nil).JSONByte())
+
 }

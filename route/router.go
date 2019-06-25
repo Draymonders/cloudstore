@@ -32,8 +32,8 @@ func Router() *gin.Engine {
 	router.GET("/file/upload", handler.UploadHandler)
 	router.POST("/file/upload", handler.DoUploadHandler)
 	router.POST("/file/meta", handler.GetFileMetaHandler)
-	router.POST("/file/query", handler.QueryMultiHandler)
-	router.GET("/file/download", handler.DownloadHandler)
+	router.POST("/file/query", handler.FilesQueryHandler)
+	router.GET("/file/download", handler.FileDownloadHandler)
 	router.POST("/file/update", handler.FileMetaUpdateHandler)
 	router.POST("/file/delete", handler.FileDeleteHandler)
 

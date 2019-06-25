@@ -77,10 +77,10 @@
                     alert(err);
             },
             success: function(body) {
-                var resp = JSON.parse(body);
-                localStorage.setItem("token", resp.data.Token)
-                localStorage.setItem("username", resp.data.Username)
-                window.location.href = resp.data.Location;
+                // var resp = JSON.parse(body);
+                localStorage.setItem("token", body.data.Token)
+                localStorage.setItem("username", body.data.Username)
+                window.location.href = body.data.Location;
             }
         });
     }

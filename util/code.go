@@ -64,4 +64,13 @@ const (
 
 	// StatusFileReadError : 19 文件读取失败
 	StatusFileReadError
+
+	// StatusRedisGetError : 20 redis获取数据失败
+	StatusRedisGetError
+
+	// StatusPartNotFull : 21 分块没有上传完毕
+	StatusPartNotFull
+
+	// StatusMergeError : 22 分块归并失败
+	StatusMergeError
 )

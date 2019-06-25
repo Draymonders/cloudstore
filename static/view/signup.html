@@ -92,7 +92,7 @@
           alert(textStatus);
       },
       success: function (body) {
-        if (body == "OK") {
+        if (body.code == 0) {
           // 成功后跳到登录页
           document.getElementById("login_hint").style.display = "block";
           setTimeout(() => {

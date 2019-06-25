@@ -75,10 +75,10 @@
       error: function (err) {
         alert('请求报错信息: ' + JSON.stringify(err));
       },
-      success: function (res) {
+      success: function (data) {
         // alert('请求返回结果: ' + JSON.stringify(res));
         // console.log(res.code)
-        var data = JSON.parse(res)
+        // var data = JSON.parse(res)
         // alert(data.code)
         if (data.code == 0) {
           window.location.href = "/static/view/home.html";
