@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"cloudstore/config"
 	mydb "cloudstore/db"
 	proto "cloudstore/service/account/proto"
 	"cloudstore/util"
@@ -12,7 +13,7 @@ import (
 // DownloadURLHandler : generate the file url
 func DownloadURLHandler(username, filehash string) string {
 	tmpURL := fmt.Sprintf(
-		"http://%s/file/download?hash=%s&username=%s", filehash, username)
+		"http://%s/file/download?hash=%s&username=%s", config.DownloadEntry, filehash, username)
 	return tmpURL
 }
 
@@ -27,10 +28,11 @@ func (u *User) UserFiles(ctx context.Context, req *proto.ReqUserFile, resp *prot
 		return nil
 	}
 
-	data, _ := json.Marshal(userFiles)
+	// TODO : 下载接口完善
 	for i, ufile := range userFiles {
 		userFiles[i].DownLoadUrl = DownloadURLHandler(username, ufile.Hash)
 	}
+	data, _ := json.Marshal(userFiles)
 	resp.FileData = data
 	return nil
 }

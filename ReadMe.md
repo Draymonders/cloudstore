@@ -1,19 +1,7 @@
 # 基于golang实现的一种简易分布式云存储服务
 
-默认启动端口`80`
-
 linux默认存储路径`/data/tmp/`
 
-windows默认存储路径`D:\tmp\`
-
-启动方式
-
-```bash
-# 上传服务
-go run service/upload/main.go
-# 文件转移服务
-go run service/transfer/main.go
-```
 
 ## 功能
 - [x] 单机文件存储
@@ -25,7 +13,8 @@ go run service/transfer/main.go
 - [x] Ceph 私有云存储
 - [x] Kodo 公有云存储 (七牛云对象存储)
 - [x] Rabbitmq 异步复制 
-- [ ] 微服务改造
+- [x] 微服务改造
+- [] 运维自动化
 ## 开发环境参数
 
 

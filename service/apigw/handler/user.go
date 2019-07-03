@@ -1,19 +1,22 @@
 package handler
 
 import (
+	"cloudstore/config"
 	"cloudstore/util"
 	"context"
 	"log"
 	"net/http"
 
 	userProto "cloudstore/service/account/proto"
+	uploadProto "cloudstore/service/upload/proto"
 
 	"github.com/gin-gonic/gin"
 	micro "github.com/micro/go-micro"
 )
 
 var (
-	userCli userProto.UserService
+	userCli   userProto.UserService
+	uploadCli uploadProto.UploadService
 )
 
 func init() {
@@ -22,6 +25,7 @@ func init() {
 	service.Init()
 	// 初始化一个account服务的客户端
 	userCli = userProto.NewUserService("go.micro.service.user", service.Client())
+	uploadCli = uploadProto.NewUploadService("go.micro.service.upload", service.Client())
 }
 
 // SignupHandler : 响应注册页面
@@ -95,8 +99,8 @@ func DoSigninHandler(c *gin.Context) {
 			Location:      "/static/view/home.html",
 			Username:      username,
 			Token:         resp.Token,
-			UploadEntry:   "",
-			DownloadEntry: "",
+			UploadEntry:   config.UploadEntry,
+			DownloadEntry: config.DownloadEntry,
 		},
 	}
 	c.Data(http.StatusOK, "application/json", res.JSONByte())
