@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cloudstore/config"
 	"cloudstore/mq"
+	"cloudstore/service/upload/config"
 	"cloudstore/service/upload/route"
 	"fmt"
 	"log"

@@ -2,7 +2,19 @@
 
 linux默认存储路径`/data/tmp/`
 
-
+启动服务
+```shell 
+# windows 启动 consul
+consul agent -dev
+# 启动 gateway 服务
+go run service/apigw/main.go --registry=consul
+# 启动 account 服务
+go run service/account/main.go --registry=consul
+# 启动 upload 服务
+go run service/upload/main.go --registry=consul
+# 启动 download 服务
+go run service/download/main.go --registry=consul
+```
 ## 功能
 - [x] 单机文件存储
 - [x] MySQL 主从复制

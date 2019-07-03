@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cloudstore/config"
+	"cloudstore/service/apigw/config"
 	"cloudstore/service/apigw/route"
 )
 
