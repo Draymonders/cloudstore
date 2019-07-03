@@ -17,6 +17,7 @@ func main() {
 		micro.RegisterTTL(time.Second*10),
 		micro.RegisterInterval(time.Second*5),
 	)
+	// 这里是为了接收命令行的参数
 	service.Init()
 
 	proto.RegisterUserServiceHandler(service.Server(), new(handler.User))

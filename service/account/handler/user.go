@@ -120,8 +120,3 @@ func (u *User) UserInfo(ctx context.Context, req *proto.ReqUserInfo, resp *proto
 	// TODO: 需增加接口支持完善用户信息(email/phone等)
 	return nil
 }
-
-// UserFiles :获取用户文件
-func (u *User) UserFiles(ctx context.Context, req *proto.ReqUserFile, resp *proto.RespUserFile) error {
-	return nil
-}

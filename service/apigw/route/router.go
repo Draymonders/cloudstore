@@ -21,5 +21,8 @@ func Router() *gin.Engine {
 	// 用户查询
 	router.POST("/user/info", handler.UserInfoHandler)
 
+	// TODO : 用户鉴权
+	// 用户文件查询
+	router.POST("/file/query", handler.FilesQueryHandler)
 	return router
 }
