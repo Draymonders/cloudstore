@@ -43,7 +43,7 @@ go run service/transfer/main.go
 - [Ceph 中文社区](http://ceph.org.cn/) [Ceph 中文文档](http://docs.ceph.org.cn/)
 - [Ceph 私有云存储实践](./doc/ceph.md)
 - [七牛云 kodo 使用体验](./doc/kodo.md)
-- [RabbitMQ 使用体验](./doc/rabbitmq.md)
+- [RabbitMQ 使用体验](./doc/rabbitmq.md) 
 - [RabbitMQ 英文官方](http://www.rabbitmq.com/getstarted.html) [RabbitMQ 一个中文版文档](http://rabbitmq.mr-ping.com/)
 - [gRPC 官方文档中文版](http://doc.oschina.net/grpc?t=56831)
 - [go-micro微服务框架 github源码](https://github.com/micro/go-micro)
