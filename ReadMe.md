@@ -14,6 +14,8 @@ go run service/account/main.go --registry=consul
 go run service/upload/main.go --registry=consul
 # 启动 download 服务
 go run service/download/main.go --registry=consul
+# 启动 transfer 服务
+go run service/transfer/main.go --registry=consul
 ```
 ## 功能
 - [x] 单机文件存储
