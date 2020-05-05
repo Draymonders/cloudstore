@@ -28,7 +28,7 @@ go run service/transfer/main.go --registry=consul
 - [x] Kodo 公有云存储 (七牛云对象存储)
 - [x] Rabbitmq 异步复制 
 - [x] 微服务改造
-- [] 运维自动化
+- [ ] 运维自动化
 ## 开发环境参数
 
 
